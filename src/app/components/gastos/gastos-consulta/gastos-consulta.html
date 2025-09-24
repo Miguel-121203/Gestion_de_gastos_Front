@@ -1,0 +1,217 @@
+<div class="gastos-consulta">
+  <div class="layout">
+
+    <!-- Contenido principal -->
+    <div class="contenido-principal">
+      <div class="header">
+        <h1>Consulta de Gastos</h1>
+        <div class="acciones-header">
+          <button class="btn btn-secundario" (click)="limpiarFiltros()">
+            <i class="icon-refresh"></i> Limpiar Filtros
+          </button>
+          <button class="btn btn-primario" routerLink="/gastos/agregar">
+            <i class="icon-plus"></i> Agregar Gasto
+          </button>
+        </div>
+      </div>
+
+      <!-- Panel de Filtros -->
+      <div class="panel-filtros">
+        <form [formGroup]="filtroForm" class="filtros-form">
+          <div class="filtros-row">
+            <div class="filtro-grupo">
+              <label>Fecha Inicio:</label>
+              <input type="date" formControlName="fechaInicio" class="input-fecha">
+            </div>
+
+            <div class="filtro-grupo">
+              <label>Fecha Fin:</label>
+              <input type="date" formControlName="fechaFin" class="input-fecha">
+            </div>
+
+            <div class="filtro-grupo">
+              <label>Categoría:</label>
+              <select formControlName="categoria" class="select-categoria">
+                <option value="">Todas las categorías</option>
+                <option *ngFor="let categoria of categorias" [value]="categoria">
+                  {{ categoria }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <div class="filtros-row">
+            <div class="filtro-grupo">
+              <label>Monto Mínimo:</label>
+              <input type="number" formControlName="montoMin" placeholder="$0" class="input-monto">
+            </div>
+
+            <div class="filtro-grupo">
+              <label>Monto Máximo:</label>
+              <input type="number" formControlName="montoMax" placeholder="$999999" class="input-monto">
+            </div>
+
+            <div class="filtro-grupo">
+              <label>Descripción:</label>
+              <input type="text" formControlName="descripcion" placeholder="Buscar en descripción..." class="input-descripcion">
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Panel de Estadísticas -->
+      <div class="panel-estadisticas" *ngIf="gastosFiltrados.length > 0">
+        <div class="estadistica">
+          <span class="stat-valor">{{ gastosFiltrados.length }}</span>
+          <span class="stat-label">Gastos</span>
+        </div>
+        <div class="estadistica">
+          <span class="stat-valor">{{ formatearMonto(totalGastos) }}</span>
+          <span class="stat-label">Total</span>
+        </div>
+        <div class="estadistica">
+          <span class="stat-valor">{{ formatearMonto(promedioGastos) }}</span>
+          <span class="stat-label">Promedio</span>
+        </div>
+        <div class="estadistica" *ngIf="gastoMayor">
+          <span class="stat-valor">{{ formatearMonto(gastoMayor.monto) }}</span>
+          <span class="stat-label">Gasto Mayor</span>
+        </div>
+      </div>
+
+      <!-- Resultados y Acciones -->
+      <div class="panel-resultados">
+        <div class="resultados-header">
+          <div class="info-resultados">
+            <span class="total-gastos">{{ gastosFiltrados.length }} gastos encontrados</span>
+          </div>
+
+          <div class="acciones-resultados">
+            <button class="btn btn-exportar" (click)="exportarCSV()" [disabled]="gastosFiltrados.length === 0">
+              <i class="icon-download"></i> Exportar CSV
+            </button>
+            <button class="btn btn-exportar" (click)="exportarPDF()" [disabled]="gastosFiltrados.length === 0">
+              <i class="icon-file-pdf"></i> Exportar PDF
+            </button>
+          </div>
+        </div>
+
+        <!-- Tabla de Gastos -->
+        <div class="tabla-container" *ngIf="gastosFiltrados.length > 0">
+          <table class="tabla-gastos">
+            <thead>
+              <tr>
+                <th (click)="cambiarOrden('fecha')" class="sortable">
+                  Fecha
+                  <i class="icon-sort"
+                     [class.icon-sort-up]="ordenarPor === 'fecha' && ordenAscendente"
+                     [class.icon-sort-down]="ordenarPor === 'fecha' && !ordenAscendente"></i>
+                </th>
+                <th (click)="cambiarOrden('categoria')" class="sortable">
+                  Categoría
+                  <i class="icon-sort"
+                     [class.icon-sort-up]="ordenarPor === 'categoria' && ordenAscendente"
+                     [class.icon-sort-down]="ordenarPor === 'categoria' && !ordenAscendente"></i>
+                </th>
+                <th (click)="cambiarOrden('descripcion')" class="sortable">
+                  Descripción
+                  <i class="icon-sort"
+                     [class.icon-sort-up]="ordenarPor === 'descripcion' && ordenAscendente"
+                     [class.icon-sort-down]="ordenarPor === 'descripcion' && !ordenAscendente"></i>
+                </th>
+                <th (click)="cambiarOrden('monto')" class="sortable">
+                  Monto
+                  <i class="icon-sort"
+                     [class.icon-sort-up]="ordenarPor === 'monto' && ordenAscendente"
+                     [class.icon-sort-down]="ordenarPor === 'monto' && !ordenAscendente"></i>
+                </th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let gasto of gastosVisibles; trackBy: trackByGasto" class="fila-gasto">
+                <td class="fecha">{{ formatearFecha(gasto.fecha) }}</td>
+                <td class="categoria">
+                  <span class="badge-categoria" [attr.data-categoria]="gasto.categoria">
+                    {{ gasto.categoria }}
+                  </span>
+                </td>
+                <td class="descripcion">{{ gasto.descripcion }}</td>
+                <td class="monto">{{ formatearMonto(gasto.monto) }}</td>
+                <td class="acciones">
+                  <button class="btn-accion btn-editar"
+                          title="Editar"
+                          (click)="editarGasto(gasto)">
+                    <i class="icon-edit"></i>
+                  </button>
+                  <button class="btn-accion btn-eliminar"
+                          title="Eliminar"
+                          (click)="eliminarGasto(gasto)">
+                    <i class="icon-trash"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Estado vacío -->
+        <div *ngIf="gastosFiltrados.length === 0" class="estado-vacio">
+          <div class="icono-vacio">📋</div>
+          <h3>No se encontraron gastos</h3>
+          <p *ngIf="gastos.length === 0">
+            No tienes gastos registrados.
+            <a routerLink="/gastos/agregar" class="link-agregar">¡Agrega tu primer gasto!</a>
+          </p>
+          <p *ngIf="gastos.length > 0">
+            Intenta ajustar los filtros para encontrar los gastos que buscas, o
+            <a routerLink="/gastos/agregar" class="link-agregar">agregar un nuevo gasto</a>
+          </p>
+        </div>
+
+        <!-- Paginación -->
+        <div class="paginacion" *ngIf="totalPaginas > 1">
+          <button class="btn-pag"
+                  (click)="cambiarPagina(paginaActual - 1)"
+                  [disabled]="paginaActual === 1">
+            ← Anterior
+          </button>
+
+          <span class="numeros-pagina">
+            <button *ngFor="let pagina of paginasArray; trackBy: trackByPagina"
+                    class="btn-numero"
+                    [class.activo]="pagina === paginaActual"
+                    (click)="cambiarPagina(pagina)">
+              {{ pagina }}
+            </button>
+          </span>
+
+          <button class="btn-pag"
+                  (click)="cambiarPagina(paginaActual + 1)"
+                  [disabled]="paginaActual === totalPaginas">
+            Siguiente →
+          </button>
+
+          <div class="info-paginacion">
+            Página {{ paginaActual }} de {{ totalPaginas }}
+            ({{ gastosPorPagina }} elementos por página)
+          </div>
+        </div>
+
+        <!-- Selector de elementos por página -->
+        <div class="selector-elementos" *ngIf="gastosFiltrados.length > 0">
+          <label for="gastosPorPagina">Mostrar:</label>
+          <select id="gastosPorPagina"
+                  [(ngModel)]="gastosPorPagina"
+                  (change)="cambiarElementosPorPagina()"
+                  class="select-elementos">
+            <option value="5">5 por página</option>
+            <option value="10">10 por página</option>
+            <option value="25">25 por página</option>
+            <option value="50">50 por página</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
