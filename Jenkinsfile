@@ -110,33 +110,32 @@ pipeline {
             }
         }
     }
-
-    // Función reutilizable para despliegue
-    def deployToEnvironment() {
-        // Stop and remove existing container
-        sh '''
-            docker stop ${CONTAINER_NAME} || true
-            docker rm ${CONTAINER_NAME} || true
-        '''
-
-        // Run new container
-        sh '''
-            docker run -d \
-                --name ${CONTAINER_NAME} \
-                -p ${PORT}:4200 \
-                ${DOCKER_IMAGE}-${ENV_NAME}:${BUILD_NUMBER}
-        '''
-
-        // Wait and check if the service is running
-        sh '''
-            sleep 10
-            if docker ps | grep ${CONTAINER_NAME}; then
-                echo "Angular server is running on port ${PORT}"
-            else
-                echo "Failed to start Angular server"
-                exit 1
-            fi
-        '''
-    }
 }
+
+// Función reutilizable para despliegue
+def deployToEnvironment() {
+    // Stop and remove existing container
+    sh '''
+        docker stop ${CONTAINER_NAME} || true
+        docker rm ${CONTAINER_NAME} || true
+    '''
+
+    // Run new container
+    sh '''
+        docker run -d \
+            --name ${CONTAINER_NAME} \
+            -p ${PORT}:4200 \
+            ${DOCKER_IMAGE}-${ENV_NAME}:${BUILD_NUMBER}
+    '''
+
+    // Wait and check if the service is running
+    sh '''
+        sleep 10
+        if docker ps | grep ${CONTAINER_NAME}; then
+            echo "Angular server is running on port ${PORT}"
+        else
+            echo "Failed to start Angular server"
+            exit 1
+        fi
+    '''
 }
