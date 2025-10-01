@@ -16,18 +16,27 @@ pipeline {
         stage('Set Environment Variables') {
             steps {
                 script {
-                    if (env.BRANCH_NAME == 'dev') {
+                    // Get current branch name
+                    def branchName = env.BRANCH_NAME ?: env.GIT_BRANCH?.replaceAll('origin/', '') ?: 'dev'
+                    echo "Detected branch: ${branchName}"
+
+                    if (branchName == 'dev') {
                         env.PORT = '4200'
                         env.ENV_NAME = 'dev'
                         env.CONTAINER_NAME = 'gestion-gastos-dev'
-                    } else if (env.BRANCH_NAME == 'qa') {
+                    } else if (branchName == 'qa') {
                         env.PORT = '4201'
                         env.ENV_NAME = 'qa'
                         env.CONTAINER_NAME = 'gestion-gastos-qa'
-                    } else if (env.BRANCH_NAME == 'main') {
+                    } else if (branchName == 'main' || branchName == 'master') {
                         env.PORT = '4202'
                         env.ENV_NAME = 'production'
                         env.CONTAINER_NAME = 'gestion-gastos-prod'
+                    } else {
+                        // Default to dev environment for other branches
+                        env.PORT = '4200'
+                        env.ENV_NAME = 'dev'
+                        env.CONTAINER_NAME = 'gestion-gastos-dev'
                     }
                     echo "Deploying to ${env.ENV_NAME} environment on port ${env.PORT}"
                 }
@@ -43,36 +52,9 @@ pipeline {
             }
         }
 
-        stage('Deploy Dev') {
-            when {
-                branch 'dev'
-            }
+        stage('Deploy') {
             steps {
-                echo 'Deploying to development environment...'
-                script {
-                    deployToEnvironment()
-                }
-            }
-        }
-
-        stage('Deploy QA') {
-            when {
-                branch 'qa'
-            }
-            steps {
-                echo 'Deploying to QA environment...'
-                script {
-                    deployToEnvironment()
-                }
-            }
-        }
-
-        stage('Deploy Production') {
-            when {
-                branch 'main'
-            }
-            steps {
-                echo 'Deploying to production environment...'
+                echo "Deploying to ${env.ENV_NAME} environment..."
                 script {
                     deployToEnvironment()
                 }
