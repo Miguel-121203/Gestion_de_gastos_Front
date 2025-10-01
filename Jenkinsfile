@@ -2,13 +2,7 @@ pipeline {
     agent any
 
     environment {
-        NODE_VERSION = '18'
-        PORT = '4200'
-        ENV = 'dev'
-    }
-
-    tools {
-        nodejs "${NODE_VERSION}"
+        DOCKER_IMAGE = 'gestion-gastos'
     }
 
     stages {
@@ -19,17 +13,33 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Set Environment Variables') {
             steps {
-                echo 'Installing npm dependencies...'
-                sh 'npm ci'
+                script {
+                    if (env.BRANCH_NAME == 'dev') {
+                        env.PORT = '4200'
+                        env.ENV_NAME = 'dev'
+                        env.CONTAINER_NAME = 'gestion-gastos-dev'
+                    } else if (env.BRANCH_NAME == 'qa') {
+                        env.PORT = '4201'
+                        env.ENV_NAME = 'qa'
+                        env.CONTAINER_NAME = 'gestion-gastos-qa'
+                    } else if (env.BRANCH_NAME == 'main') {
+                        env.PORT = '4202'
+                        env.ENV_NAME = 'production'
+                        env.CONTAINER_NAME = 'gestion-gastos-prod'
+                    }
+                    echo "Deploying to ${env.ENV_NAME} environment on port ${env.PORT}"
+                }
             }
         }
 
-        stage('Build') {
+        stage('Build with Docker') {
             steps {
-                echo 'Building Angular application...'
-                sh 'npm run build'
+                echo 'Building Angular application with Docker...'
+                script {
+                    docker.build("${DOCKER_IMAGE}-${env.ENV_NAME}:${BUILD_NUMBER}")
+                }
             }
         }
 
@@ -40,28 +50,31 @@ pipeline {
             steps {
                 echo 'Deploying to development environment...'
                 script {
-                    // Stop any existing development server
-                    sh '''
-                        pkill -f "ng serve" || true
-                        sleep 2
-                    '''
+                    deployToEnvironment()
+                }
+            }
+        }
 
-                    // Start the development server in background
-                    sh '''
-                        nohup npm run start -- --host 0.0.0.0 --port ${PORT} --disable-host-check > /tmp/angular-dev.log 2>&1 &
-                        echo $! > /tmp/angular-dev.pid
-                    '''
+        stage('Deploy QA') {
+            when {
+                branch 'qa'
+            }
+            steps {
+                echo 'Deploying to QA environment...'
+                script {
+                    deployToEnvironment()
+                }
+            }
+        }
 
-                    // Wait and check if the service is running
-                    sh '''
-                        sleep 10
-                        if netstat -tuln | grep :${PORT}; then
-                            echo "Angular dev server is running on port ${PORT}"
-                        else
-                            echo "Failed to start Angular dev server"
-                            exit 1
-                        fi
-                    '''
+        stage('Deploy Production') {
+            when {
+                branch 'main'
+            }
+            steps {
+                echo 'Deploying to production environment...'
+                script {
+                    deployToEnvironment()
                 }
             }
         }
@@ -71,22 +84,59 @@ pipeline {
         success {
             echo 'Pipeline completed successfully!'
             script {
-                if (env.BRANCH_NAME == 'dev') {
-                    echo "Development deployment available at: http://localhost:${PORT}"
+                if (env.PORT) {
+                    echo "${env.ENV_NAME} deployment available at: http://localhost:${env.PORT}"
                 }
             }
         }
         failure {
             echo 'Pipeline failed!'
             script {
-                // Stop the dev server if deployment failed
-                sh '''
-                    if [ -f /tmp/angular-dev.pid ]; then
-                        kill $(cat /tmp/angular-dev.pid) || true
-                        rm -f /tmp/angular-dev.pid
-                    fi
-                '''
+                if (env.CONTAINER_NAME) {
+                    sh '''
+                        docker stop ${CONTAINER_NAME} || true
+                        docker rm ${CONTAINER_NAME} || true
+                    '''
+                }
+            }
+        }
+        always {
+            script {
+                if (env.ENV_NAME) {
+                    sh '''
+                        docker images ${DOCKER_IMAGE}-${ENV_NAME} --format "table {{.Tag}}" | tail -n +2 | sort -nr | tail -n +6 | xargs -r docker rmi ${DOCKER_IMAGE}-${ENV_NAME}: || true
+                    '''
+                }
             }
         }
     }
+
+    // Función reutilizable para despliegue
+    def deployToEnvironment() {
+        // Stop and remove existing container
+        sh '''
+            docker stop ${CONTAINER_NAME} || true
+            docker rm ${CONTAINER_NAME} || true
+        '''
+
+        // Run new container
+        sh '''
+            docker run -d \
+                --name ${CONTAINER_NAME} \
+                -p ${PORT}:4200 \
+                ${DOCKER_IMAGE}-${ENV_NAME}:${BUILD_NUMBER}
+        '''
+
+        // Wait and check if the service is running
+        sh '''
+            sleep 10
+            if docker ps | grep ${CONTAINER_NAME}; then
+                echo "Angular server is running on port ${PORT}"
+            else
+                echo "Failed to start Angular server"
+                exit 1
+            fi
+        '''
+    }
+}
 }
