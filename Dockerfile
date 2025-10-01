@@ -1,5 +1,5 @@
-# Use Node.js 18 as base image
-FROM node:18-alpine
+# Use Node.js 20.11.1+ as base image (required for Angular 20)
+FROM node:20.18-alpine
 
 # Set working directory
 WORKDIR /app
