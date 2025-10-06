@@ -1,0 +1,98 @@
+<div class="categorias-container">
+  <!-- Header Section -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="title-section">
+        <h1>Consulta de Categorías</h1>
+        <p>Gestiona todas tus categorías personalizadas</p>
+      </div>
+      <button class="btn-regresar" (click)="regresar()">Regresar</button>
+    </div>
+  </div>
+
+  <!-- Stats Section -->
+  <div class="stats-section">
+    <div class="stats-card">
+      <div class="stat-item">
+        <span class="stat-number">{{ getTotalCategorias() }}</span>
+        <span class="stat-label">Total Categorías</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-number">{{ getTotalFiltradas() }}</span>
+        <span class="stat-label">Mostradas</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros Section -->
+  <div class="filtros-section">
+    <div class="filtros-grid">
+      <!-- Filtro por texto -->
+      <div class="filtro-group">
+        <label for="filtro-texto">Buscar categoría:</label>
+        <div class="input-container">
+          <input 
+            type="text" 
+            id="filtro-texto" 
+            [(ngModel)]="filtroTexto"
+            (input)="aplicarFiltros()"
+            placeholder="Nombre o descripción">
+          <span class="input-icon">🔍</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botones de filtro -->
+    <div class="filtros-actions">
+      <button class="btn-limpiar" (click)="limpiarFiltros()">Limpiar Filtros</button>
+      <button class="btn-nueva" (click)="irANuevaCategoria()">
+        <span class="material-icons">add</span>
+        Nueva Categoría
+      </button>
+    </div>
+  </div>
+
+  <!-- Categorías Grid -->
+  <div class="categorias-grid" *ngIf="categoriasFiltradas.length > 0">
+      <div class="categoria-card" *ngFor="let categoria of categoriasFiltradas" [style.border-left-color]="categoria.color">
+        <div class="categoria-header">
+          <div class="categoria-icon material-icons">{{ categoria.icono }}</div>
+          <div class="categoria-actions">
+            <button class="btn-edit" (click)="editarCategoria(categoria)" title="Editar">
+              <span class="material-icons">edit</span>
+            </button>
+            <button class="btn-delete" (click)="eliminarCategoria(categoria)" title="Eliminar">
+              <span class="material-icons">delete</span>
+            </button>
+          </div>
+        </div>
+      
+      <div class="categoria-content">
+        <h3 class="categoria-nombre">{{ categoria.nombre }}</h3>
+        <p class="categoria-descripcion" *ngIf="categoria.descripcion">{{ categoria.descripcion }}</p>
+        <div class="categoria-meta">
+          <span class="categoria-id">ID: {{ categoria.id }}</span>
+          <span class="categoria-color" [style.background-color]="categoria.color"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- No Data Message -->
+  <div class="no-data-section" *ngIf="categoriasFiltradas.length === 0">
+    <div class="no-data-card">
+      <div class="no-data-icon material-icons">category</div>
+      <h3>No se encontraron categorías</h3>
+      <p *ngIf="filtroTexto">
+        No hay categorías que coincidan con "{{ filtroTexto }}"
+      </p>
+      <p *ngIf="!filtroTexto">
+        Aún no has creado ninguna categoría personalizada
+      </p>
+      <button class="btn-nueva-principal" (click)="irANuevaCategoria()">
+        <span class="material-icons">add</span>
+        Crear Primera Categoría
+      </button>
+    </div>
+  </div>
+</div>

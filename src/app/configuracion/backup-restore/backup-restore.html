@@ -1,0 +1,155 @@
+<div class="backup-container">
+  <div class="page-header">
+    <div class="header-content">
+      <div class="title-section">
+        <h1>Backup y Restore</h1>
+        <p>Gestiona copias de seguridad de tus datos</p>
+      </div>
+      <div class="header-actions">
+        <button 
+          class="btn-secondary" 
+          routerLink="/configuracion">
+          <span class="material-icons">arrow_back</span>
+          Volver
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <!-- Success/Error Messages -->
+    <div class="message success" *ngIf="mensajeExito">
+      <span class="material-icons">check_circle</span>
+      {{ mensajeExito }}
+    </div>
+    
+    <div class="message error" *ngIf="mensajeError">
+      <span class="material-icons">error</span>
+      {{ mensajeError }}
+    </div>
+
+    <!-- Create Backup Section -->
+    <div class="backup-section">
+      <div class="section-header">
+        <h3><span class="material-icons">add</span> Crear Nuevo Backup</h3>
+        <p>Crea una copia de seguridad de tus datos</p>
+      </div>
+
+      <form [formGroup]="backupForm" (ngSubmit)="crearBackup()">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="tipo">Tipo de Backup *</label>
+            <div class="select-container">
+              <select id="tipo" formControlName="tipo">
+                <option value="completo">Completo</option>
+                <option value="gastos">Solo Gastos</option>
+                <option value="ingresos">Solo Ingresos</option>
+                <option value="categorias">Solo Categorías</option>
+              </select>
+              <span class="select-arrow">▼</span>
+            </div>
+            <p class="form-description">{{ obtenerDescripcionTipo(backupForm.get('tipo')?.value) }}</p>
+          </div>
+
+          <div class="form-group">
+            <label for="descripcion">Descripción *</label>
+            <input 
+              type="text" 
+              id="descripcion" 
+              formControlName="descripcion"
+              placeholder="Ej: Backup mensual - Diciembre 2024"
+              maxlength="200">
+            <p class="form-description">Describe el propósito de este backup</p>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button 
+            type="submit" 
+            class="btn-create"
+            [disabled]="isLoading || backupForm.invalid">
+            <span class="material-icons" *ngIf="!isLoading">backup</span>
+            <span class="material-icons" *ngIf="isLoading">hourglass_empty</span>
+            {{ isLoading ? 'Creando...' : 'Crear Backup' }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Existing Backups Section -->
+    <div class="backups-section">
+      <div class="section-header">
+        <h3><span class="material-icons">folder</span> Backups Existentes</h3>
+        <p>Gestiona tus copias de seguridad guardadas</p>
+      </div>
+
+      <!-- Backups List -->
+      <div class="backups-list" *ngIf="backups.length > 0">
+        <div 
+          class="backup-card" 
+          *ngFor="let backup of backups"
+          [class.selected]="backupSeleccionado?.id === backup.id"
+          (click)="seleccionarBackup(backup)">
+          
+          <div class="backup-header">
+            <div class="backup-icon" [style.background-color]="obtenerColorTipo(backup.tipo)">
+              <span class="material-icons">{{ obtenerIconoTipo(backup.tipo) }}</span>
+            </div>
+            <div class="backup-info">
+              <h4>{{ backup.descripcion }}</h4>
+              <p class="backup-meta">
+                {{ formatearFecha(backup.fecha) }} • {{ formatearTamano(backup.tamano) }}
+              </p>
+            </div>
+            <div class="backup-type">
+              <span class="type-badge" [style.background-color]="obtenerColorTipo(backup.tipo)">
+                {{ backup.tipo.toUpperCase() }}
+              </span>
+            </div>
+          </div>
+
+          <div class="backup-actions">
+            <button 
+              class="btn-restore" 
+              (click)="restaurarBackup(backup); $event.stopPropagation()"
+              [disabled]="isLoading"
+              title="Restaurar backup">
+              <span class="material-icons">restore</span>
+              Restaurar
+            </button>
+            <button 
+              class="btn-delete" 
+              (click)="eliminarBackup(backup); $event.stopPropagation()"
+              [disabled]="isLoading"
+              title="Eliminar backup">
+              <span class="material-icons">delete</span>
+              Eliminar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- No Backups Message -->
+      <div class="no-backups" *ngIf="backups.length === 0">
+        <div class="no-backups-icon">
+          <span class="material-icons">backup</span>
+        </div>
+        <h3>No hay backups disponibles</h3>
+        <p>Crea tu primer backup para proteger tus datos</p>
+      </div>
+    </div>
+
+    <!-- Info Section -->
+    <div class="info-section">
+      <div class="info-card">
+        <h3><span class="material-icons">info</span> Información Importante</h3>
+        <ul>
+          <li>Los backups se almacenan localmente en tu navegador</li>
+          <li>Recomendamos crear backups regulares para proteger tus datos</li>
+          <li>El restore reemplazará todos los datos actuales</li>
+          <li>Los backups incluyen gastos, ingresos y categorías personalizadas</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
