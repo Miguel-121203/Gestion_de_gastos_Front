@@ -1,54 +1,57 @@
 <div class="gastos-container">
-  <!-- Header Section -->
-  <div class="page-header">
-    <div class="header-content">
-      <div class="title-section">
-        <h1>Consulta de Gastos</h1>
-      </div>
-      <button class="btn-regresar" routerLink="/gastos">Regresar</button>
-    </div>
-  </div>
 
-  <!-- Filtros Section -->
-  <div class="filtros-section">
+  <!-- 🧭 Encabezado -->
+  <header class="page-header">
+    <div class="header-content">
+      <h1 class="title">📊 Consulta de Gastos</h1>
+      <button class="btn btn-regresar" routerLink="/gastos">
+        ← Regresar
+      </button>
+    </div>
+  </header>
+
+  <!-- 🔍 Sección de Filtros -->
+  <section class="filtros-section">
+    <h2 class="section-title">Filtros de Búsqueda</h2>
     <div class="filtros-grid">
+
       <!-- Filtro por fecha -->
       <div class="filtro-group">
-        <label for="fecha-filtro">Filtrar por fecha:</label>
+        <label for="fecha-filtro">📅 Fecha:</label>
         <div class="input-container">
-          <input 
-            type="text" 
-            id="fecha-filtro" 
+          <input
+            type="text"
+            id="fecha-filtro"
             [(ngModel)]="selectedDateFormatted"
             (click)="openDatePicker()"
             (keydown)="preventTyping($event)"
             placeholder="dd / mm / aaaa"
             readonly>
-          <button type="button" class="date-picker-btn" (click)="openDatePicker()">
-            📅
+          <button type="button" class="btn-icon" (click)="openDatePicker()">
+            📆
           </button>
         </div>
-        
-        <!-- Date Picker Modal -->
+
+        <!-- Modal de calendario -->
         <div class="date-picker-modal" *ngIf="showDatePicker" (click)="closeDatePicker()">
           <div class="date-picker-content" (click)="$event.stopPropagation()">
-            <div class="date-picker-header">
+            <header class="date-picker-header">
               <h3>Seleccionar Fecha</h3>
-              <button type="button" class="close-btn" (click)="closeDatePicker()">×</button>
-            </div>
-            
+              <button type="button" class="btn-close" (click)="closeDatePicker()">×</button>
+            </header>
+
             <div class="date-picker-body">
               <div class="month-navigation">
                 <button type="button" (click)="previousMonth()">‹</button>
-                <span class="current-month">{{ currentMonthName }} {{ currentYear }}</span>
+                <span>{{ currentMonthName }} {{ currentYear }}</span>
                 <button type="button" (click)="nextMonth()">›</button>
               </div>
-              
+
               <div class="calendar-grid">
                 <div class="day-header" *ngFor="let day of dayHeaders">{{ day }}</div>
-                <div 
-                  class="calendar-day" 
-                  *ngFor="let day of calendarDays" 
+                <div
+                  class="calendar-day"
+                  *ngFor="let day of calendarDays"
                   [class.disabled]="day.disabled"
                   [class.today]="day.isToday"
                   [class.selected]="day.isSelected"
@@ -57,40 +60,35 @@
                 </div>
               </div>
             </div>
-            
-            <div class="date-picker-footer">
-              <button type="button" class="btn-cancel" (click)="closeDatePicker()">Cancelar</button>
-              <button type="button" class="btn-confirm" (click)="confirmDate()">Confirmar</button>
-            </div>
+
+            <footer class="date-picker-footer">
+              <button class="btn btn-cancel" (click)="closeDatePicker()">Cancelar</button>
+              <button class="btn btn-confirm" (click)="confirmDate()">Confirmar</button>
+            </footer>
           </div>
         </div>
       </div>
 
       <!-- Filtro por categoría -->
       <div class="filtro-group">
-        <label for="categoria-filtro">Filtrar por categoria:</label>
+        <label for="categoria-filtro">🏷️ Categoría:</label>
         <div class="select-container">
-          <select 
-            id="categoria-filtro" 
+          <select
+            id="categoria-filtro"
             [(ngModel)]="categoriaSeleccionada"
             (change)="aplicarFiltros()">
-            <option value="">Seleccione la categoria</option>
-            <option *ngFor="let categoria of categoriasDisponibles" 
-                    [value]="getValorCategoria(categoria)">
-              {{ categoria.nombre }}
-            </option>
+            <option value="">Seleccione la categoría</option>
           </select>
-          <span class="select-arrow">▼</span>
         </div>
       </div>
 
       <!-- Filtro por monto -->
       <div class="filtro-group">
-        <label for="monto">Filtrar por monto:</label>
+        <label for="monto">💰 Monto:</label>
         <div class="input-container">
-          <input 
-            type="number" 
-            id="monto" 
+          <input
+            type="number"
+            id="monto"
             [(ngModel)]="montoFiltro"
             (input)="aplicarFiltros()"
             placeholder="Escriba un monto">
@@ -98,52 +96,50 @@
       </div>
     </div>
 
-    <!-- Botones de filtro -->
+    <!-- Botón limpiar -->
     <div class="filtros-actions">
-      <button class="btn-limpiar" (click)="limpiarFiltros()">Limpiar Filtros</button>
+      <button class="btn btn-limpiar" (click)="limpiarFiltros()">
+        ✨ Limpiar Filtros
+      </button>
     </div>
-  </div>
+  </section>
 
-  <!-- Tabla de gastos -->
-  <div class="tabla-container">
+  <!-- 📋 Tabla de Gastos -->
+  <section class="tabla-container">
     <table class="gastos-table">
       <thead>
         <tr>
           <th>Fecha</th>
-          <th>Categoria</th>
+          <th>Categoría</th>
           <th>Monto</th>
           <th>Descripción</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let gasto of gastosFiltrados">
-          <td>{{ gasto.fecha }}</td>
+          <td>{{ gasto.fecha | date:'shortDate' }}</td>
           <td>{{ gasto.categoria }}</td>
           <td class="monto-cell">{{ formatearMonto(gasto.monto) }}</td>
           <td>{{ gasto.descripcion }}</td>
         </tr>
         <tr *ngIf="gastosFiltrados.length === 0">
-          <td colspan="4" class="no-data">No se encontraron gastos con los filtros aplicados</td>
+          <td colspan="4" class="no-data">
+            🚫 No se encontraron gastos con los filtros aplicados.
+          </td>
         </tr>
       </tbody>
     </table>
-  </div>
+  </section>
 
-  <!-- Botones de Exportación -->
-  <div class="export-section" *ngIf="gastosFiltrados.length > 0">
+  <!-- 📤 Exportación -->
+  <section class="export-section" *ngIf="gastosFiltrados.length > 0">
     <div class="export-header">
-      <h3>Exportar Datos</h3>
+      <h3>📦 Exportar Datos</h3>
       <p>Descarga los gastos filtrados en diferentes formatos</p>
     </div>
-    <div class="export-buttons">
-      <button class="btn-export btn-excel" (click)="exportarAExcel()">
-        <span class="material-icons">table_chart</span>
-        Exportar a Excel
-      </button>
-      <button class="btn-export btn-pdf" (click)="exportarAPDF()">
-        <span class="material-icons">picture_as_pdf</span>
-        Exportar a PDF
-      </button>
-    </div>
-  </div>
+
+
+  </section>
+
 </div>
+

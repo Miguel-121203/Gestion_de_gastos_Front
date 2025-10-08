@@ -19,10 +19,10 @@
           <div class="form-group">
             <label for="fecha">Fecha creación:</label>
             <div class="input-container">
-              <input 
-                type="text" 
-                id="fecha" 
-                name="fecha" 
+              <input
+                type="text"
+                id="fecha"
+                name="fecha"
                 [(ngModel)]="selectedDateFormatted"
                 (click)="openDatePicker()"
                 (keydown)="preventTyping($event)"
@@ -33,7 +33,7 @@
                 📅
               </button>
             </div>
-            
+
             <!-- Date Picker Modal -->
             <div class="date-picker-modal" *ngIf="showDatePicker" (click)="closeDatePicker()">
               <div class="date-picker-content" (click)="$event.stopPropagation()">
@@ -41,19 +41,19 @@
                   <h3>Seleccionar Fecha</h3>
                   <button type="button" class="close-btn" (click)="closeDatePicker()">×</button>
                 </div>
-                
+
                 <div class="date-picker-body">
                   <div class="month-navigation">
                     <button type="button" (click)="previousMonth()">‹</button>
                     <span class="current-month">{{ currentMonthName }} {{ currentYear }}</span>
                     <button type="button" (click)="nextMonth()">›</button>
                   </div>
-                  
+
                   <div class="calendar-grid">
                     <div class="day-header" *ngFor="let day of dayHeaders">{{ day }}</div>
-                    <div 
-                      class="calendar-day" 
-                      *ngFor="let day of calendarDays" 
+                    <div
+                      class="calendar-day"
+                      *ngFor="let day of calendarDays"
                       [class.disabled]="day.disabled"
                       [class.today]="day.isToday"
                       [class.selected]="day.isSelected"
@@ -62,7 +62,7 @@
                     </div>
                   </div>
                 </div>
-                
+
                 <div class="date-picker-footer">
                   <button type="button" class="btn-cancel" (click)="closeDatePicker()">Cancelar</button>
                   <button type="button" class="btn-confirm" (click)="confirmDate()">Confirmar</button>
@@ -76,7 +76,7 @@
             <div class="select-container">
               <select id="categoria" name="categoria" [(ngModel)]="categoriaSeleccionada">
                 <option value="">Seleccione la categoria</option>
-                <option *ngFor="let categoria of categoriasDisponibles" 
+                <option *ngFor="let categoria of categoriasDisponibles"
                         [value]="getValorCategoria(categoria)">
                   {{ categoria.nombre }}
                 </option>
