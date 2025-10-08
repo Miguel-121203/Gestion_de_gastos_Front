@@ -30,18 +30,18 @@ export class NuevoGasto implements OnInit {
   // Fecha seleccionada
   selectedDate: Date | null = null;
   selectedDateFormatted: string = '';
-  
+
   // Date picker modal
   showDatePicker: boolean = false;
   currentDate: Date = new Date();
   currentMonth: number = new Date().getMonth();
   currentYear: number = new Date().getFullYear();
-  
+
   // Calendar data
   dayHeaders: string[] = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
   calendarDays: CalendarDay[] = [];
   tempSelectedDate: Date | null = null;
-  
+
   // Month names
   monthNames: string[] = [
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -157,7 +157,7 @@ export class NuevoGasto implements OnInit {
     for (let i = 0; i < 42; i++) {
       const date = new Date(startDate);
       date.setDate(startDate.getDate() + i);
-      
+
       const isToday = this.isSameDay(date, today);
       const isDisabled = date < today || date.getMonth() !== this.currentMonth;
       const isSelected = this.tempSelectedDate ? this.isSameDay(date, this.tempSelectedDate) : false;
