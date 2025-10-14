@@ -1,7 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { CategoriaGasto } from '../../models/models-module';
+import { CategoriasService } from '../../services/categorias.service';
 
 interface CalendarDay {
   day: number;
@@ -17,7 +19,14 @@ interface CalendarDay {
   templateUrl: './nuevo-ingreso.html',
   styleUrl: './nuevo-ingreso.css'
 })
-export class NuevoIngreso {
+export class NuevoIngreso implements OnInit {
+  // Servicios inyectados
+  private categoriasService = inject(CategoriasService);
+
+  // Datos de categorías dinámicas
+  categoriasDisponibles: CategoriaGasto[] = [];
+  categoriaSeleccionada: string = '';
+
   // Fecha seleccionada
   selectedDate: Date | null = null;
   selectedDateFormatted: string = '';
@@ -40,6 +49,45 @@ export class NuevoIngreso {
   constructor() {
     this.currentYear = new Date().getFullYear();
     this.generateCalendar();
+  }
+
+  ngOnInit() {
+    this.cargarCategorias();
+  }
+
+  // Método para cargar categorías desde el servicio
+  cargarCategorias() {
+    this.categoriasService.obtenerCategorias().subscribe({
+      next: (categorias) => {
+        this.categoriasDisponibles = categorias;
+        console.log('Categorías cargadas en nuevo-ingreso:', categorias);
+      },
+      error: (error) => {
+        console.error('Error al cargar categorías:', error);
+        // Fallback a categorías por defecto si hay error
+        this.categoriasDisponibles = this.getCategoriasPorDefecto();
+      }
+    });
+  }
+
+  // Método para obtener categorías por defecto (fallback)
+  private getCategoriasPorDefecto(): CategoriaGasto[] {
+    return [
+      { id: 1, nombre: 'Alimentación', icono: 'restaurant', descripcion: 'Comidas y bebidas', color: '#FF6B6B' },
+      { id: 2, nombre: 'Transporte', icono: 'directions_car', descripcion: 'Gasolina, transporte público', color: '#4ECDC4' },
+      { id: 3, nombre: 'Vivienda', icono: 'home', descripcion: 'Alquiler, servicios públicos', color: '#45B7D1' },
+      { id: 4, nombre: 'Salud', icono: 'local_hospital', descripcion: 'Medicinas, consultas médicas', color: '#96CEB4' },
+      { id: 5, nombre: 'Educación', icono: 'school', descripcion: 'Cursos, libros, materiales', color: '#FFEAA7' },
+      { id: 6, nombre: 'Entretenimiento', icono: 'movie', descripcion: 'Cine, juegos, hobbies', color: '#DDA0DD' },
+      { id: 7, nombre: 'Ropa', icono: 'checkroom', descripcion: 'Vestimenta y accesorios', color: '#FFB6C1' },
+      { id: 8, nombre: 'Tecnología', icono: 'computer', descripcion: 'Dispositivos, software', color: '#98D8C8' },
+      { id: 9, nombre: 'Otros', icono: 'category', descripcion: 'Gastos diversos', color: '#F7DC6F' }
+    ];
+  }
+
+  // Método para obtener el valor del select (formato consistente)
+  getValorCategoria(categoria: CategoriaGasto): string {
+    return categoria.nombre.toLowerCase().replace(/\s+/g, '_');
   }
 
   get currentMonthName(): string {

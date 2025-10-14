@@ -1,0 +1,209 @@
+<div class="preferencias-container">
+  <div class="page-header">
+    <div class="header-content">
+      <div class="title-section">
+        <h1>Preferencias</h1>
+        <p>Personaliza tu experiencia en la aplicación</p>
+      </div>
+      <div class="header-actions">
+        <button 
+          class="btn-secondary" 
+          routerLink="/configuracion">
+          <span class="material-icons">arrow_back</span>
+          Volver
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <form [formGroup]="preferenciasForm" (ngSubmit)="guardarPreferencias()">
+      <!-- Success/Error Messages -->
+      <div class="message success" *ngIf="mensajeExito">
+        <span class="material-icons">check_circle</span>
+        {{ mensajeExito }}
+      </div>
+      
+      <div class="message error" *ngIf="mensajeError">
+        <span class="material-icons">error</span>
+        {{ mensajeError }}
+      </div>
+
+      <!-- Apariencia Section -->
+      <div class="settings-section">
+        <div class="section-header">
+          <h3><span class="material-icons">palette</span> Apariencia</h3>
+          <p>Personaliza el aspecto visual de la aplicación</p>
+        </div>
+
+        <div class="settings-grid">
+          <div class="setting-group">
+            <label for="tema">Tema</label>
+            <div class="select-container">
+              <select id="tema" formControlName="tema">
+                <option value="claro">Claro</option>
+                <option value="oscuro">Oscuro</option>
+                <option value="auto">Automático</option>
+              </select>
+              <span class="select-arrow">▼</span>
+            </div>
+            <p class="setting-description">{{ obtenerDescripcionTema(preferenciasForm.get('tema')?.value) }}</p>
+          </div>
+
+          <div class="setting-group">
+            <label for="idioma">Idioma</label>
+            <div class="select-container">
+              <select id="idioma" formControlName="idioma">
+                <option value="es">Español</option>
+                <option value="en">English</option>
+              </select>
+              <span class="select-arrow">▼</span>
+            </div>
+            <p class="setting-description">{{ obtenerDescripcionIdioma(preferenciasForm.get('idioma')?.value) }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formato Section -->
+      <div class="settings-section">
+        <div class="section-header">
+          <h3><span class="material-icons">format_list_numbered</span> Formato</h3>
+          <p>Configura cómo se muestran los datos</p>
+        </div>
+
+        <div class="settings-grid">
+          <div class="setting-group">
+            <label for="moneda">Moneda</label>
+            <div class="select-container">
+              <select id="moneda" formControlName="moneda">
+                <option value="COP">Peso Colombiano (COP)</option>
+                <option value="USD">Dólar Estadounidense (USD)</option>
+                <option value="EUR">Euro (EUR)</option>
+              </select>
+              <span class="select-arrow">▼</span>
+            </div>
+            <p class="setting-description">{{ obtenerDescripcionMoneda(preferenciasForm.get('moneda')?.value) }}</p>
+          </div>
+
+          <div class="setting-group">
+            <label for="formatoFecha">Formato de Fecha</label>
+            <div class="select-container">
+              <select id="formatoFecha" formControlName="formatoFecha">
+                <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+              </select>
+              <span class="select-arrow">▼</span>
+            </div>
+            <p class="setting-description">{{ obtenerDescripcionFormatoFecha(preferenciasForm.get('formatoFecha')?.value) }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notificaciones Section -->
+      <div class="settings-section">
+        <div class="section-header">
+          <h3><span class="material-icons">notifications</span> Notificaciones</h3>
+          <p>Controla cómo y cuándo recibes notificaciones</p>
+        </div>
+
+        <div class="settings-grid">
+          <div class="setting-group">
+            <div class="toggle-setting">
+              <div class="toggle-info">
+                <label for="email">Notificaciones por Email</label>
+                <p class="setting-description">Recibe notificaciones importantes por correo electrónico</p>
+              </div>
+              <div class="toggle-switch">
+                <input type="checkbox" id="email" formControlName="email" class="toggle-input">
+                <label for="email" class="toggle-label"></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="setting-group">
+            <div class="toggle-setting">
+              <div class="toggle-info">
+                <label for="push">Notificaciones Push</label>
+                <p class="setting-description">Recibe notificaciones en tiempo real en el navegador</p>
+              </div>
+              <div class="toggle-switch">
+                <input type="checkbox" id="push" formControlName="push" class="toggle-input">
+                <label for="push" class="toggle-label"></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="setting-group">
+            <div class="toggle-setting">
+              <div class="toggle-info">
+                <label for="recordatorios">Recordatorios</label>
+                <p class="setting-description">Recibe recordatorios para registrar gastos e ingresos</p>
+              </div>
+              <div class="toggle-switch">
+                <input type="checkbox" id="recordatorios" formControlName="recordatorios" class="toggle-input">
+                <label for="recordatorios" class="toggle-label"></label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Privacidad Section -->
+      <div class="settings-section">
+        <div class="section-header">
+          <h3><span class="material-icons">privacy_tip</span> Privacidad</h3>
+          <p>Controla cómo se utilizan tus datos</p>
+        </div>
+
+        <div class="settings-grid">
+          <div class="setting-group">
+            <div class="toggle-setting">
+              <div class="toggle-info">
+                <label for="datosAnaliticos">Datos Analíticos</label>
+                <p class="setting-description">Permite el uso de datos anónimos para mejorar la aplicación</p>
+              </div>
+              <div class="toggle-switch">
+                <input type="checkbox" id="datosAnaliticos" formControlName="datosAnaliticos" class="toggle-input">
+                <label for="datosAnaliticos" class="toggle-label"></label>
+              </div>
+            </div>
+          </div>
+
+          <div class="setting-group">
+            <div class="toggle-setting">
+              <div class="toggle-info">
+                <label for="cookies">Cookies</label>
+                <p class="setting-description">Permite el uso de cookies para mejorar la experiencia</p>
+              </div>
+              <div class="toggle-switch">
+                <input type="checkbox" id="cookies" formControlName="cookies" class="toggle-input">
+                <label for="cookies" class="toggle-label"></label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button 
+          type="button" 
+          class="btn-reset" 
+          (click)="resetearPreferencias()"
+          [disabled]="isLoading">
+          <span class="material-icons">refresh</span>
+          Resetear
+        </button>
+        <button 
+          type="submit" 
+          class="btn-save"
+          [disabled]="isLoading || preferenciasForm.invalid">
+          <span class="material-icons" *ngIf="!isLoading">save</span>
+          <span class="material-icons" *ngIf="isLoading">hourglass_empty</span>
+          {{ isLoading ? 'Guardando...' : 'Guardar Preferencias' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

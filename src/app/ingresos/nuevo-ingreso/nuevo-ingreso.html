@@ -74,16 +74,12 @@
           <div class="form-group">
             <label for="categoria">Categoria:</label>
             <div class="select-container">
-              <select id="categoria" name="categoria">
+              <select id="categoria" name="categoria" [(ngModel)]="categoriaSeleccionada">
                 <option value="">Seleccione la categoria</option>
-                <option value="salario">Salario</option>
-                <option value="freelance">Freelance</option>
-                <option value="inversion">Inversión</option>
-                <option value="venta">Venta</option>
-                <option value="regalo">Regalo</option>
-                <option value="premio">Premio</option>
-                <option value="reembolso">Reembolso</option>
-                <option value="otros">Otros</option>
+                <option *ngFor="let categoria of categoriasDisponibles" 
+                        [value]="getValorCategoria(categoria)">
+                  {{ categoria.nombre }}
+                </option>
               </select>
               <span class="select-arrow">▼</span>
             </div>

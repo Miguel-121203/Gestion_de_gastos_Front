@@ -1,13 +1,22 @@
 // Modelos de datos para la aplicación
+export interface GastoRequest {
+  amount: number;
+  expenseCategoryId: number;
+  expenseDate: string;
+  description: string;
+  userId: number;
+}
+
 export interface Gasto {
-  id?: number;
-  fecha: Date;
-  categoria: string;
-  descripcion: string;
-  monto: number;
-  metodoPago: string;
-  notas?: string;
-  fechaCreacion?: Date;
+  expenseId: number;
+  amount: number;
+  expenseCategoryId: number;
+  expenseDate: string;
+  description: string;
+  userId: number;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CategoriaGasto {
@@ -15,6 +24,9 @@ export interface CategoriaGasto {
   nombre: string;
   icono: string;
   descripcion?: string;
+  color?: string;
+  fechaCreacion?: Date;
+  activa?: boolean;
 }
 
 export interface MetodoPago {

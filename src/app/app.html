@@ -6,7 +6,7 @@
     </div>
     
     <div class="user-info">
-      <div class="user-icon">👤</div>
+      <div class="user-icon material-icons">person</div>
       <div class="user-details">
         <p>Bienvenido</p>
         <p class="username">Jesus_David777</p>
@@ -17,31 +17,31 @@
       <ul class="nav-list">
         <li class="nav-item" [class.active]="isActiveRoute('/dashboard')">
           <a href="/dashboard" class="nav-link">
-            <span class="nav-icon">📊</span>
+            <span class="nav-icon material-icons">dashboard</span>
             Dashboard
           </a>
         </li>
         <li class="nav-item" [class.active]="isActiveRoute('/gastos')">
           <a href="/gastos" class="nav-link">
-            <span class="nav-icon">💰</span>
+            <span class="nav-icon material-icons">trending_down</span>
             Gastos
           </a>
         </li>
         <li class="nav-item" [class.active]="isActiveRoute('/ingresos')">
           <a href="/ingresos" class="nav-link">
-            <span class="nav-icon">💵</span>
+            <span class="nav-icon material-icons">trending_up</span>
             Ingresos
           </a>
         </li>
-        <li class="nav-item">
-          <a href="#" class="nav-link">
-            <span class="nav-icon">📋</span>
-            Categoria de gastos
+        <li class="nav-item" [class.active]="isActiveRoute('/categorias')">
+          <a href="/categorias" class="nav-link">
+            <span class="nav-icon material-icons">category</span>
+            Categorías de Gastos
           </a>
         </li>
-        <li class="nav-item">
-          <a href="#" class="nav-link">
-            <span class="nav-icon">⚙️</span>
+        <li class="nav-item" [class.active]="isActiveRoute('/configuracion')">
+          <a href="/configuracion" class="nav-link">
+            <span class="nav-icon material-icons">settings</span>
             Configuración
           </a>
         </li>

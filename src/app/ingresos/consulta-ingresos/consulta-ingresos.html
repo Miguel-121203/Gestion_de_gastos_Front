@@ -70,16 +70,12 @@
       <div class="filtro-group">
         <label for="categoria-filtro">Filtrar por categoria:</label>
         <div class="select-container">
-          <select id="categoria-filtro" [(ngModel)]="categoriaSeleccionada">
+          <select id="categoria-filtro" [(ngModel)]="categoriaSeleccionada" (change)="aplicarFiltros()">
             <option value="">Todas las categorías</option>
-            <option value="Salario">Salario</option>
-            <option value="Freelance">Freelance</option>
-            <option value="Inversión">Inversión</option>
-            <option value="Venta">Venta</option>
-            <option value="Regalo">Regalo</option>
-            <option value="Premio">Premio</option>
-            <option value="Reembolso">Reembolso</option>
-            <option value="Otros">Otros</option>
+            <option *ngFor="let categoria of categoriasDisponibles" 
+                    [value]="getValorCategoria(categoria)">
+              {{ categoria.nombre }}
+            </option>
           </select>
           <span class="select-arrow">▼</span>
         </div>
@@ -123,5 +119,23 @@
         </tr>
       </tbody>
     </table>
+  </div>
+
+  <!-- Botones de Exportación -->
+  <div class="export-section" *ngIf="ingresosFiltrados.length > 0">
+    <div class="export-header">
+      <h3>Exportar Datos</h3>
+      <p>Descarga los ingresos filtrados en diferentes formatos</p>
+    </div>
+    <div class="export-buttons">
+      <button class="btn-export btn-excel" (click)="exportarAExcel()">
+        <span class="material-icons">table_chart</span>
+        Exportar a Excel
+      </button>
+      <button class="btn-export btn-pdf" (click)="exportarAPDF()">
+        <span class="material-icons">picture_as_pdf</span>
+        Exportar a PDF
+      </button>
+    </div>
   </div>
 </div>

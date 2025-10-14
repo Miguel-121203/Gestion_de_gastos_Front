@@ -1,7 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { CategoriaGasto } from '../../models/models-module';
+import { CategoriasService } from '../../services/categorias.service';
+import { ExportService } from '../../services/export.service';
 
 interface CalendarDay {
   day: number;
@@ -18,7 +21,14 @@ interface CalendarDay {
   templateUrl: './consulta-ingresos.html',
   styleUrl: './consulta-ingresos.css'
 })
-export class ConsultaIngresos {
+export class ConsultaIngresos implements OnInit {
+  // Servicios inyectados
+  private categoriasService = inject(CategoriasService);
+  private exportService = inject(ExportService);
+
+  // Datos de categorías dinámicas
+  categoriasDisponibles: CategoriaGasto[] = [];
+
   // Mock data for the table
   ingresos = [
     { fecha: '27-05-2025', categoria: 'Salario', monto: '2.500.000', descripcion: 'Pago mensual de nómina' },
@@ -55,6 +65,45 @@ export class ConsultaIngresos {
   constructor() {
     this.currentYear = new Date().getFullYear();
     this.generateCalendar();
+  }
+
+  ngOnInit() {
+    this.cargarCategorias();
+  }
+
+  // Método para cargar categorías desde el servicio
+  cargarCategorias() {
+    this.categoriasService.obtenerCategorias().subscribe({
+      next: (categorias) => {
+        this.categoriasDisponibles = categorias;
+        console.log('Categorías cargadas en consulta-ingresos:', categorias);
+      },
+      error: (error) => {
+        console.error('Error al cargar categorías:', error);
+        // Fallback a categorías por defecto si hay error
+        this.categoriasDisponibles = this.getCategoriasPorDefecto();
+      }
+    });
+  }
+
+  // Método para obtener categorías por defecto (fallback)
+  private getCategoriasPorDefecto(): CategoriaGasto[] {
+    return [
+      { id: 1, nombre: 'Alimentación', icono: 'restaurant', descripcion: 'Comidas y bebidas', color: '#FF6B6B' },
+      { id: 2, nombre: 'Transporte', icono: 'directions_car', descripcion: 'Gasolina, transporte público', color: '#4ECDC4' },
+      { id: 3, nombre: 'Vivienda', icono: 'home', descripcion: 'Alquiler, servicios públicos', color: '#45B7D1' },
+      { id: 4, nombre: 'Salud', icono: 'local_hospital', descripcion: 'Medicinas, consultas médicas', color: '#96CEB4' },
+      { id: 5, nombre: 'Educación', icono: 'school', descripcion: 'Cursos, libros, materiales', color: '#FFEAA7' },
+      { id: 6, nombre: 'Entretenimiento', icono: 'movie', descripcion: 'Cine, juegos, hobbies', color: '#DDA0DD' },
+      { id: 7, nombre: 'Ropa', icono: 'checkroom', descripcion: 'Vestimenta y accesorios', color: '#FFB6C1' },
+      { id: 8, nombre: 'Tecnología', icono: 'computer', descripcion: 'Dispositivos, software', color: '#98D8C8' },
+      { id: 9, nombre: 'Otros', icono: 'category', descripcion: 'Gastos diversos', color: '#F7DC6F' }
+    ];
+  }
+
+  // Método para obtener el valor del select (formato consistente)
+  getValorCategoria(categoria: CategoriaGasto): string {
+    return categoria.nombre.toLowerCase().replace(/\s+/g, '_');
   }
 
   get currentMonthName(): string {
@@ -183,5 +232,31 @@ export class ConsultaIngresos {
     this.categoriaSeleccionada = '';
     this.montoFiltro = null;
     this.ingresosFiltrados = [...this.ingresos];
+  }
+
+  // ===== EXPORT METHODS =====
+
+  /**
+   * Exporta los ingresos filtrados a Excel
+   */
+  exportarAExcel(): void {
+    try {
+      this.exportService.exportIngresosToExcel(this.ingresosFiltrados);
+    } catch (error) {
+      console.error('Error al exportar a Excel:', error);
+      alert('Error al exportar a Excel. Por favor, inténtalo de nuevo.');
+    }
+  }
+
+  /**
+   * Exporta los ingresos filtrados a PDF
+   */
+  exportarAPDF(): void {
+    try {
+      this.exportService.exportIngresosToPDF(this.ingresosFiltrados);
+    } catch (error) {
+      console.error('Error al exportar a PDF:', error);
+      alert('Error al exportar a PDF. Por favor, inténtalo de nuevo.');
+    }
   }
 }
