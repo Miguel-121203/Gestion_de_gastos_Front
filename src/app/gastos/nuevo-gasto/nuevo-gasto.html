@@ -1,0 +1,186 @@
+<div class="min-h-screen">
+  <!-- Header -->
+  <div class="header-container">
+    <div class="header-card">
+      <div class="header-content">
+        <div class="icon-title">
+          <div class="icon-box">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="1" x2="12" y2="23"></line>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+          </div>
+          <h1>Nuevo Gasto</h1>
+        </div>
+        <button class="btn-regresar" routerLink="/gastos">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          <span class="hide-mobile">Regresar</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form Container -->
+  <div class="form-container">
+    <div class="form-card">
+      <div class="form-header">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        <h2>Información del Gasto</h2>
+      </div>
+
+      <form #gastoForm="ngForm" (ngSubmit)="createGasto()">
+        <!-- Grid Layout -->
+        <div class="form-grid">
+          <!-- Monto -->
+          <div class="form-group">
+            <label class="form-label">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="1" x2="12" y2="23"></line>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+              </svg>
+              Monto *
+            </label>
+            <div class="input-wrapper">
+              <span class="input-prefix">$</span>
+              <input
+                type="number"
+                name="amount"
+                [(ngModel)]="nuevoGasto.amount"
+                placeholder="0.00"
+                step="0.01"
+                min="0"
+                required
+                class="form-input"
+                [class.input-error]="gastoForm.submitted && !nuevoGasto.amount"
+                #amount="ngModel">
+            </div>
+            <p *ngIf="gastoForm.submitted && !nuevoGasto.amount" class="error-message">
+              El monto debe ser mayor a 0
+            </p>
+          </div>
+
+          <!-- Fecha -->
+          <div class="form-group">
+            <label class="form-label">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              Fecha *
+            </label>
+            <input
+              type="date"
+              name="expenseDate"
+              [(ngModel)]="nuevoGasto.expenseDate"
+              required
+              class="form-input"
+              [class.input-error]="gastoForm.submitted && !nuevoGasto.expenseDate"
+              #expenseDate="ngModel">
+            <p *ngIf="gastoForm.submitted && !nuevoGasto.expenseDate" class="error-message">
+              Seleccione una fecha
+            </p>
+          </div>
+        </div>
+
+        <!-- Categoría -->
+        <div class="form-group">
+          <label class="form-label">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+              <line x1="7" y1="7" x2="7.01" y2="7"></line>
+            </svg>
+            Categoría *
+          </label>
+          <select
+            name="expenseCategoryId"
+            [(ngModel)]="nuevoGasto.expenseCategoryId"
+            required
+            class="form-input"
+            [class.input-error]="gastoForm.submitted && !nuevoGasto.expenseCategoryId"
+            #category="ngModel">
+            <option value="">Seleccione una categoría</option>
+            <option *ngFor="let cat of categorias" [value]="cat.id">
+              {{ cat.nombre }}
+            </option>
+          </select>
+          <p *ngIf="gastoForm.submitted && !nuevoGasto.expenseCategoryId" class="error-message">
+            Seleccione una categoría
+          </p>
+        </div>
+
+        <!-- Descripción -->
+        <div class="form-group">
+          <label class="form-label">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+            </svg>
+            Descripción *
+          </label>
+          <textarea
+            name="description"
+            [(ngModel)]="nuevoGasto.description"
+            placeholder="Describe el gasto..."
+            rows="4"
+            required
+            class="form-input"
+            [class.input-error]="gastoForm.submitted && !nuevoGasto.description"
+            #description="ngModel"></textarea>
+          <p *ngIf="gastoForm.submitted && !nuevoGasto.description" class="error-message">
+            La descripción es obligatoria
+          </p>
+        </div>
+
+        <!-- Error Message -->
+        <div *ngIf="errorMessage" class="alert-error">
+          {{ errorMessage }}
+        </div>
+
+        <!-- Buttons -->
+        <div class="button-group">
+          <button
+            type="submit"
+            [disabled]="isLoading"
+            class="btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+              <polyline points="17 21 17 13 7 13 7 21"></polyline>
+              <polyline points="7 3 7 8 15 8"></polyline>
+            </svg>
+            {{ isLoading ? 'Guardando...' : 'Guardar Gasto' }}
+          </button>
+          <button
+            type="button"
+            (click)="limpiarFormulario()"
+            class="btn-secondary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+            Limpiar
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Info Card -->
+    <div class="info-card">
+      <p>
+        <span class="tip-badge">💡 Tip:</span> Asegúrate de llenar todos los campos marcados con * para registrar tu gasto correctamente.
+      </p>
+    </div>
+  </div>
+</div>
