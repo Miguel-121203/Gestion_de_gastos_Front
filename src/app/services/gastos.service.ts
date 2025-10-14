@@ -1,10 +1,8 @@
+
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { Gasto } from '../models/models-module';
- // o el nombre real del archivo
-
-
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable, catchError, throwError } from 'rxjs';
+import { GastoResponse, Gasto } from '../interface/gasto.interface';
 
 @Injectable({
   providedIn: 'root'
@@ -12,16 +10,16 @@ import { Gasto } from '../models/models-module';
 export class GastosService {
   private http = inject(HttpClient);
 
-  // ⚙️ Aquí define la URL de tu backend
-  private apiUrl = 'http://localhost:8080/api/v1/expenses';
 
   // 🔹 GET: Listar todos los gastos
-  getGastos(): Observable<Gasto[]> {
-    return this.http.get<Gasto[]>(this.apiUrl);
-  }
+getGastos(): Observable<GastoResponse[]> {
+  return this.http.get<GastoResponse[]>('http://localhost:8080/api/v1/expenses');
+}
 
-  // 🔹 POST: Crear un nuevo gasto
-  crearGasto(gasto: Gasto): Observable<Gasto> {
-    return this.http.post<Gasto>(this.apiUrl, gasto);
-  }
+
+createGasto( Gasto: Gasto): Observable<Gasto> {
+const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+return this.http.post<Gasto>( 'http://localhost:8080/api/v1/expenses' ,Gasto,{headers});
+}
+
 }

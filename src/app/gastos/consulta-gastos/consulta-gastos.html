@@ -1,4 +1,4 @@
-<div class="gastos-container">
+<div class="consulta-gastos-container">
 
   <!-- 🧭 Encabezado -->
   <header class="page-header">
@@ -10,136 +10,156 @@
     </div>
   </header>
 
-  <!-- 🔍 Sección de Filtros -->
-  <section class="filtros-section">
-    <h2 class="section-title">Filtros de Búsqueda</h2>
-    <div class="filtros-grid">
+  <!-- 🔄 Indicador de carga -->
+  <div class="loading-container" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Cargando gastos...</p>
+  </div>
 
-      <!-- Filtro por fecha -->
-      <div class="filtro-group">
-        <label for="fecha-filtro">📅 Fecha:</label>
-        <div class="input-container">
-          <input
-            type="text"
-            id="fecha-filtro"
-            [(ngModel)]="selectedDateFormatted"
-            (click)="openDatePicker()"
-            (keydown)="preventTyping($event)"
-            placeholder="dd / mm / aaaa"
-            readonly>
-          <button type="button" class="btn-icon" (click)="openDatePicker()">
-            📆
-          </button>
-        </div>
+  <!-- ⚠️ Mensaje de error -->
+  <div class="error-container" *ngIf="error && !loading">
+    <div class="error-icon">⚠️</div>
+    <h3>{{ error }}</h3>
+    <button class="btn btn-primary" (click)="cargarGastos()">
+      🔄 Reintentar
+    </button>
+  </div>
 
-        <!-- Modal de calendario -->
-        <div class="date-picker-modal" *ngIf="showDatePicker" (click)="closeDatePicker()">
-          <div class="date-picker-content" (click)="$event.stopPropagation()">
-            <header class="date-picker-header">
-              <h3>Seleccionar Fecha</h3>
-              <button type="button" class="btn-close" (click)="closeDatePicker()">×</button>
-            </header>
+  <!-- Contenido principal -->
+  <ng-container *ngIf="!loading && !error">
 
-            <div class="date-picker-body">
-              <div class="month-navigation">
-                <button type="button" (click)="previousMonth()">‹</button>
-                <span>{{ currentMonthName }} {{ currentYear }}</span>
-                <button type="button" (click)="nextMonth()">›</button>
-              </div>
+    <!-- 🔍 Sección de Filtros -->
+    <section class="filtros-section">
+      <h2 class="section-title">🔍 Filtros de Búsqueda</h2>
+      <div class="filtros-grid">
 
-              <div class="calendar-grid">
-                <div class="day-header" *ngFor="let day of dayHeaders">{{ day }}</div>
-                <div
-                  class="calendar-day"
-                  *ngFor="let day of calendarDays"
-                  [class.disabled]="day.disabled"
-                  [class.today]="day.isToday"
-                  [class.selected]="day.isSelected"
-                  (click)="selectDate(day)">
-                  {{ day.day }}
-                </div>
-              </div>
-            </div>
+        <!-- Filtro por descripción -->
+        <div class="filtro-group">
+          <label for="descripcion-filtro">📝 Descripción:</label>
+          <div class="input-container">
+            <input
+              type="text"
+              id="descripcion-filtro"
+              [(ngModel)]="descripcionFiltro"
+              (input)="aplicarFiltros()"
+              placeholder="Buscar por descripción..."
+              class="input-field">
 
-            <footer class="date-picker-footer">
-              <button class="btn btn-cancel" (click)="closeDatePicker()">Cancelar</button>
-              <button class="btn btn-confirm" (click)="confirmDate()">Confirmar</button>
-            </footer>
           </div>
         </div>
-      </div>
 
-      <!-- Filtro por categoría -->
-      <div class="filtro-group">
-        <label for="categoria-filtro">🏷️ Categoría:</label>
-        <div class="select-container">
-          <select
-            id="categoria-filtro"
-            [(ngModel)]="categoriaSeleccionada"
-            (change)="aplicarFiltros()">
-            <option value="">Seleccione la categoría</option>
-          </select>
+        <!-- Filtro por fecha -->
+        <div class="filtro-group">
+          <label for="fecha-filtro">📅 Fecha:</label>
+          <div class="input-container">
+            <input
+              type="date"
+              id="fecha-filtro"
+              [(ngModel)]="fechaFiltro"
+              (change)="aplicarFiltros()"
+              class="input-field">
+            <button
+              type="button"
+              class="btn-icon btn-clear"
+              (click)="limpiarFecha()"
+              *ngIf="fechaFiltro"
+              title="Limpiar fecha">
+              ✖
+            </button>
+          </div>
         </div>
+
       </div>
 
-      <!-- Filtro por monto -->
-      <div class="filtro-group">
-        <label for="monto">💰 Monto:</label>
-        <div class="input-container">
-          <input
-            type="number"
-            id="monto"
-            [(ngModel)]="montoFiltro"
-            (input)="aplicarFiltros()"
-            placeholder="Escriba un monto">
-        </div>
+      <!-- Botón limpiar todos los filtros -->
+      <div class="filtros-actions">
+        <button
+          class="btn btn-limpiar"
+          (click)="limpiarFiltros()"
+          *ngIf="descripcionFiltro || fechaFiltro">
+          ✨ Limpiar Todos los Filtros
+        </button>
       </div>
-    </div>
+    </section>
 
-    <!-- Botón limpiar -->
-    <div class="filtros-actions">
-      <button class="btn btn-limpiar" (click)="limpiarFiltros()">
-        ✨ Limpiar Filtros
+    <!-- 📊 Resumen de resultados -->
+    <section class="resumen-section" *ngIf="gastosFiltrados.length > 0">
+      <div class="resumen-card">
+        <span class="resumen-label">📋 Total de gastos</span>
+        <span class="resumen-value">{{ gastosFiltrados.length }}</span>
+      </div>
+
+      <div class="resumen-card highlight">
+        <span class="resumen-label">💰 Monto total</span>
+        <span class="resumen-value total">${{ calcularTotal() | number:'1.2-2' }}</span>
+      </div>
+    </section>
+
+    <!-- 📋 Tabla de Gastos -->
+    <section class="tabla-container" *ngIf="gastosFiltrados.length > 0">
+      <div class="table-wrapper">
+        <table class="gastos-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Fecha</th>
+              <th>Categoría</th>
+              <th>Descripción</th>
+              <th>Monto</th>
+              <th>Usuario</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let gasto of gastosFiltrados; let i = index"
+                [class.even]="i % 2 === 0"
+                [class.inactive]="!gasto.active">
+              <td data-label="ID" class="id-cell">
+                #{{ gasto.expenseId }}
+              </td>
+              <td data-label="Fecha" class="fecha-cell">
+                {{ gasto.expenseDate | date:'dd/MM/yyyy' }}
+              </td>
+              <td data-label="Categoría" class="categoria-cell">
+                <span class="categoria-badge">
+                  Categoría {{ gasto.expenseCategoryId }}
+                </span>
+              </td>
+              <td data-label="Descripción" class="descripcion-cell">
+                {{ gasto.description }}
+              </td>
+              <td data-label="Monto" class="monto-cell">
+                ${{ gasto.amount | number:'1.2-2' }}
+              </td>
+              <td data-label="Usuario" class="usuario-cell">
+                👤 Usuario {{ gasto.userId }}
+              </td>
+        
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 📭 Mensaje cuando no hay resultados con filtros -->
+    <div class="no-data" *ngIf="gastosFiltrados.length === 0 && gastos.length > 0">
+      <div class="no-data-icon">🔍</div>
+      <h3>No se encontraron gastos</h3>
+      <p>No hay gastos que coincidan con los filtros aplicados</p>
+      <button class="btn btn-primary" (click)="limpiarFiltros()">
+        🗑️ Limpiar filtros
       </button>
     </div>
-  </section>
 
-  <!-- 📋 Tabla de Gastos -->
-  <section class="tabla-container">
-    <table class="gastos-table">
-      <thead>
-        <tr>
-          <th>Fecha</th>
-          <th>Categoría</th>
-          <th>Monto</th>
-          <th>Descripción</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let gasto of gastosFiltrados">
-          <td>{{ gasto.fecha | date:'shortDate' }}</td>
-          <td>{{ gasto.categoria }}</td>
-          <td class="monto-cell">{{ formatearMonto(gasto.monto) }}</td>
-          <td>{{ gasto.descripcion }}</td>
-        </tr>
-        <tr *ngIf="gastosFiltrados.length === 0">
-          <td colspan="4" class="no-data">
-            🚫 No se encontraron gastos con los filtros aplicados.
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </section>
-
-  <!-- 📤 Exportación -->
-  <section class="export-section" *ngIf="gastosFiltrados.length > 0">
-    <div class="export-header">
-      <h3>📦 Exportar Datos</h3>
-      <p>Descarga los gastos filtrados en diferentes formatos</p>
+    <!-- 📭 Mensaje cuando no hay datos en absoluto -->
+    <div class="no-data" *ngIf="gastos.length === 0">
+      <div class="no-data-icon">📊</div>
+      <h3>No hay gastos registrados</h3>
+      <p>Comienza agregando tu primer gasto</p>
+      <button class="btn btn-primary" routerLink="/gastos/nuevo">
+        ➕ Agregar Gasto
+      </button>
     </div>
 
-
-  </section>
+  </ng-container>
 
 </div>
-
