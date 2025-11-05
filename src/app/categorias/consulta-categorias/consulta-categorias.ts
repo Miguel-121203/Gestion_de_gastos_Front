@@ -3,8 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { CategoriaGasto } from '../../models/models-module';
+
 import { CategoriasService } from '../../services/categorias.service';
+import { CategoriaAPI } from '../../interface/categories.interface';
 
 @Component({
   selector: 'app-consulta-categorias',
@@ -14,15 +15,25 @@ import { CategoriasService } from '../../services/categorias.service';
   styleUrl: './consulta-categorias.css'
 })
 export class ConsultaCategorias implements OnInit, OnDestroy {
-  categorias: CategoriaGasto[] = [];
-  categoriasFiltradas: CategoriaGasto[] = [];
+  categorias: CategoriaAPI[] = [];
+  categoriasFiltradas: CategoriaAPI[] = [];
   filtroTexto: string = '';
+  filtroTipo: 'ALL' | 'INCOME' | 'EXPENSE' = 'ALL';
+  filtroEstado: 'ALL' | 'ACTIVE' | 'INACTIVE' = 'ALL';
+
+  isLoading: boolean = false;
+  errorMessage: string = '';
+
+  // Variables para el modal de edición
+  showEditModal: boolean = false;
+  categoriaEditando: CategoriaAPI | null = null;
+  isLoadingModal: boolean = false;
+  errorMessageModal: string = '';
+
   private categoriasSubscription?: Subscription;
 
   private router = inject(Router);
   private categoriasService = inject(CategoriasService);
-
-  constructor() {}
 
   ngOnInit() {
     this.cargarCategorias();
@@ -34,81 +45,226 @@ export class ConsultaCategorias implements OnInit, OnDestroy {
     }
   }
 
-  // Cargar todas las categorías
   cargarCategorias() {
+    this.isLoading = true;
+    this.errorMessage = '';
+
     this.categoriasSubscription = this.categoriasService.obtenerCategorias().subscribe({
       next: (categorias) => {
         this.categorias = categorias;
-        this.categoriasFiltradas = [...categorias];
+        this.aplicarFiltros();
+        this.isLoading = false;
+        console.log('Categorías cargadas:', categorias);
       },
       error: (error) => {
         console.error('Error al cargar categorías:', error);
-        // Aquí podrías mostrar un mensaje de error al usuario
+        this.errorMessage = 'Error al cargar las categorías. Por favor intenta nuevamente.';
+        this.isLoading = false;
       }
     });
   }
 
-  // Aplicar filtros
   aplicarFiltros() {
-    if (!this.filtroTexto.trim()) {
-      this.categoriasFiltradas = [...this.categorias];
-    } else {
-      const filtro = this.filtroTexto.toLowerCase();
-      this.categoriasFiltradas = this.categorias.filter(categoria =>
-        categoria.nombre.toLowerCase().includes(filtro) ||
-        categoria.descripcion?.toLowerCase().includes(filtro)
+    let resultado = [...this.categorias];
+
+    if (this.filtroTexto.trim()) {
+      const textoLower = this.filtroTexto.toLowerCase().trim();
+      resultado = resultado.filter(cat =>
+        cat.name.toLowerCase().includes(textoLower) ||
+        (cat.description && cat.description.toLowerCase().includes(textoLower))
       );
     }
+
+    if (this.filtroTipo !== 'ALL') {
+      resultado = resultado.filter(cat => cat.type === this.filtroTipo);
+    }
+
+    if (this.filtroEstado === 'ACTIVE') {
+      resultado = resultado.filter(cat => cat.active);
+    } else if (this.filtroEstado === 'INACTIVE') {
+      resultado = resultado.filter(cat => !cat.active);
+    }
+
+    this.categoriasFiltradas = resultado;
   }
 
-  // Limpiar filtros
+  onFiltroTextoChange() {
+    this.aplicarFiltros();
+  }
+
+  onFiltroTipoChange() {
+    this.aplicarFiltros();
+  }
+
+  onFiltroEstadoChange() {
+    this.aplicarFiltros();
+  }
+
   limpiarFiltros() {
     this.filtroTexto = '';
-    this.categoriasFiltradas = [...this.categorias];
+    this.filtroTipo = 'ALL';
+    this.filtroEstado = 'ALL';
+    this.aplicarFiltros();
   }
 
-  // Editar categoría
-  editarCategoria(categoria: CategoriaGasto) {
-    // Aquí podrías navegar a una página de edición o abrir un modal
-    console.log('Editar categoría:', categoria);
-    // this.router.navigate(['/categorias/editar-categoria', categoria.id]);
+  // Abrir modal de edición
+  editarCategoria(categoria: CategoriaAPI) {
+    this.categoriaEditando = { ...categoria }; // Clonar para no modificar el original
+    this.showEditModal = true;
+    this.errorMessageModal = '';
+    console.log('Editando categoría:', this.categoriaEditando);
   }
 
-  // Eliminar categoría
-  eliminarCategoria(categoria: CategoriaGasto) {
-    if (confirm(`¿Estás seguro de que deseas eliminar la categoría "${categoria.nombre}"?`)) {
-      this.categoriasService.eliminarCategoria(categoria.id).subscribe({
-        next: (exito) => {
-          if (exito) {
-            console.log('Categoría eliminada exitosamente');
-            this.cargarCategorias(); // Recargar la lista
-          }
+  // Cerrar modal
+  cerrarModal() {
+    if (this.isLoadingModal) {
+      return; // No permitir cerrar mientras se guarda
+    }
+    this.showEditModal = false;
+    this.categoriaEditando = null;
+    this.errorMessageModal = '';
+  }
+
+  // Guardar cambios
+  guardarCambios() {
+    if (!this.categoriaEditando) return;
+
+    if (!this.validarCategoria()) {
+      return;
+    }
+
+    this.isLoadingModal = true;
+    this.errorMessageModal = '';
+
+    this.categoriasService.actualizarCategoria(this.categoriaEditando.categoryId, this.categoriaEditando).subscribe({
+      next: (categoriaActualizada) => {
+        console.log('Categoría actualizada:', categoriaActualizada);
+        this.isLoadingModal = false;
+        alert('¡Categoría actualizada exitosamente!');
+        this.cerrarModal();
+        this.cargarCategorias(); // Recargar lista
+      },
+      error: (error) => {
+        console.error('Error al actualizar:', error);
+        this.errorMessageModal = error.error?.message || 'Error al actualizar la categoría';
+        this.isLoadingModal = false;
+      }
+    });
+  }
+
+  // Validar categoría en el modal
+  validarCategoria(): boolean {
+    if (!this.categoriaEditando) return false;
+
+    if (!this.categoriaEditando.name || !this.categoriaEditando.name.trim()) {
+      this.errorMessageModal = 'El nombre es obligatorio';
+      return false;
+    }
+    if (this.categoriaEditando.name.length < 3) {
+      this.errorMessageModal = 'El nombre debe tener al menos 3 caracteres';
+      return false;
+    }
+    if (this.categoriaEditando.name.length > 50) {
+      this.errorMessageModal = 'El nombre no puede exceder 50 caracteres';
+      return false;
+    }
+    if (!this.categoriaEditando.type) {
+      this.errorMessageModal = 'Debe seleccionar un tipo';
+      return false;
+    }
+    if (this.categoriaEditando.description && this.categoriaEditando.description.length > 200) {
+      this.errorMessageModal = 'La descripción no puede exceder 200 caracteres';
+      return false;
+    }
+    return true;
+  }
+
+  eliminarCategoria(categoria: CategoriaAPI) {
+    if (confirm(`¿Estás seguro de eliminar la categoría "${categoria.name}"?`)) {
+      this.categoriasService.eliminarCategoria(categoria.categoryId).subscribe({
+        next: () => {
+          console.log('Categoría eliminada exitosamente');
+          this.cargarCategorias();
+          alert('Categoría eliminada exitosamente');
         },
         error: (error) => {
           console.error('Error al eliminar categoría:', error);
-          // Aquí podrías mostrar un mensaje de error al usuario
+          alert('Error al eliminar la categoría. Puede estar en uso.');
         }
       });
     }
   }
 
-  // Regresar al inicio
-  regresar() {
-    this.router.navigate(['/categorias']);
+  toggleEstado(categoria: CategoriaAPI) {
+    const nuevoEstado = !categoria.active;
+    const accion = nuevoEstado ? 'activar' : 'desactivar';
+
+    if (confirm(`¿Deseas ${accion} la categoría "${categoria.name}"?`)) {
+      const categoriaActualizada = { ...categoria, active: nuevoEstado };
+
+      this.categoriasService.actualizarCategoria(categoria.categoryId, categoriaActualizada).subscribe({
+        next: () => {
+          console.log(`Categoría ${accion}da exitosamente`);
+          this.cargarCategorias();
+          alert(`Categoría ${accion}da exitosamente`);
+        },
+        error: (error) => {
+          console.error(`Error al ${accion} categoría:`, error);
+          alert(`Error al ${accion} la categoría.`);
+        }
+      });
+    }
   }
 
-  // Ir a nueva categoría
-  irANuevaCategoria() {
-    this.router.navigate(['/categorias/nueva-categoria']);
+  crearNuevaCategoria() {
+    this.router.navigate(['/categorias/nueva']);
   }
 
-  // Contar total de categorías
+  verDetalles(categoria: CategoriaAPI) {
+    console.log('Detalles de categoría:', categoria);
+  }
+
+  getTipoTexto(tipo: 'INCOME' | 'EXPENSE'): string {
+    return tipo === 'INCOME' ? 'Ingreso' : 'Gasto';
+  }
+
+  getTipoClase(tipo: 'INCOME' | 'EXPENSE'): string {
+    return tipo === 'INCOME' ? 'badge-income' : 'badge-expense';
+  }
+
+  getEstadoTexto(activo: boolean): string {
+    return activo ? 'Activa' : 'Inactiva';
+  }
+
+  getEstadoClase(activo: boolean): string {
+    return activo ? 'badge-active' : 'badge-inactive';
+  }
+
+  formatearFecha(fecha: string): string {
+    return new Date(fecha).toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
+
   getTotalCategorias(): number {
     return this.categorias.length;
   }
 
-  // Contar categorías filtradas
-  getTotalFiltradas(): number {
-    return this.categoriasFiltradas.length;
+  getTotalIngresos(): number {
+    return this.categorias.filter(cat => cat.type === 'INCOME').length;
+  }
+
+  getTotalGastos(): number {
+    return this.categorias.filter(cat => cat.type === 'EXPENSE').length;
+  }
+
+  getTotalActivas(): number {
+    return this.categorias.filter(cat => cat.active).length;
+  }
+
+  getTotalInactivas(): number {
+    return this.categorias.filter(cat => !cat.active).length;
   }
 }

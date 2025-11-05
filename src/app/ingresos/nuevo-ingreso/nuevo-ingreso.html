@@ -1,135 +1,195 @@
-<div class="ingresos-container">
-  <!-- Header Section -->
-  <div class="page-header">
-    <div class="header-content">
-      <div class="title-section">
-        <h1>Nuevo Ingreso</h1>
-        <p>Registra tus ingresos de manera rápida y sencilla</p>
-      </div>
-      <button class="btn-regresar" routerLink="/ingresos">Regresar</button>
-    </div>
-  </div>
-
-  <!-- Form Section -->
-  <div class="form-container">
-    <form class="ingresos-form">
-      <div class="form-grid">
-        <!-- Left Column -->
-        <div class="form-column">
-          <div class="form-group">
-            <label for="fecha">Fecha creación:</label>
-            <div class="input-container">
-              <input 
-                type="text" 
-                id="fecha" 
-                name="fecha" 
-                [(ngModel)]="selectedDateFormatted"
-                (click)="openDatePicker()"
-                (keydown)="preventTyping($event)"
-                placeholder="dd / mm / aaaa"
-                readonly
-                required>
-              <button type="button" class="date-picker-btn" (click)="openDatePicker()">
-                📅
-              </button>
+<body>
+  <div class="min-h-screen">
+    <!-- Header -->
+    <div class="header-container">
+      <div class="header-card">
+        <div class="header-content">
+          <div class="icon-title">
+            <div class="icon-box">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="1" x2="12" y2="23"></line>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+              </svg>
             </div>
-            
-            <!-- Date Picker Modal -->
-            <div class="date-picker-modal" *ngIf="showDatePicker" (click)="closeDatePicker()">
-              <div class="date-picker-content" (click)="$event.stopPropagation()">
-                <div class="date-picker-header">
-                  <h3>Seleccionar Fecha</h3>
-                  <button type="button" class="close-btn" (click)="closeDatePicker()">×</button>
-                </div>
-                
-                <div class="date-picker-body">
-                  <div class="month-navigation">
-                    <button type="button" (click)="previousMonth()">‹</button>
-                    <span class="current-month">{{ currentMonthName }} {{ currentYear }}</span>
-                    <button type="button" (click)="nextMonth()">›</button>
-                  </div>
-                  
-                  <div class="calendar-grid">
-                    <div class="day-header" *ngFor="let day of dayHeaders">{{ day }}</div>
-                    <div 
-                      class="calendar-day" 
-                      *ngFor="let day of calendarDays" 
-                      [class.disabled]="day.disabled"
-                      [class.today]="day.isToday"
-                      [class.selected]="day.isSelected"
-                      (click)="selectDate(day)">
-                      {{ day.day }}
-                    </div>
-                  </div>
-                </div>
-                
-                <div class="date-picker-footer">
-                  <button type="button" class="btn-cancel" (click)="closeDatePicker()">Cancelar</button>
-                  <button type="button" class="btn-confirm" (click)="confirmDate()">Confirmar</button>
-                </div>
+            <h1>Nuevo Ingreso</h1>
+          </div>
+          <button class="btn-regresar" routerLink="/ingresos">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            <span class="hide-mobile">Regresar</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Container -->
+    <div class="form-container">
+      <div class="form-card">
+        <div class="form-header">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+          <h2>Información del Ingreso</h2>
+        </div>
+
+        <form (ngSubmit)="createIngreso()" #ingresoForm="ngForm">
+          <!-- Success Message - Se puede mostrar con una variable booleana -->
+          <div *ngIf="isLoading" class="alert-success">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            Guardando ingreso...
+          </div>
+
+          <!-- Error Message -->
+          <div *ngIf="errorMessage" class="alert-error">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="15" y1="9" x2="9" y2="15"></line>
+              <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+            <span>{{ errorMessage }}</span>
+          </div>
+
+          <!-- Grid Layout -->
+          <div class="form-grid">
+            <!-- Monto -->
+            <div class="form-group">
+              <label class="form-label">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="1" x2="12" y2="23"></line>
+                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
+                Monto *
+              </label>
+              <div class="input-wrapper">
+                <span class="input-prefix">$</span>
+                <input
+                  type="number"
+                  [(ngModel)]="nuevoIngreso.amount"
+                  name="amount"
+                  placeholder="0.00"
+                  step="0.01"
+                  min="0.01"
+                  required
+                  class="form-input">
               </div>
             </div>
-          </div>
 
-          <div class="form-group">
-            <label for="categoria">Categoria:</label>
-            <div class="select-container">
-              <select id="categoria" name="categoria" [(ngModel)]="categoriaSeleccionada">
-                <option value="">Seleccione la categoria</option>
-                <option *ngFor="let categoria of categoriasDisponibles" 
-                        [value]="getValorCategoria(categoria)">
-                  {{ categoria.nombre }}
-                </option>
-              </select>
-              <span class="select-arrow">▼</span>
+            <!-- Fecha -->
+            <div class="form-group">
+              <label class="form-label">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                Fecha *
+              </label>
+              <input
+                type="date"
+                [(ngModel)]="nuevoIngreso.incomeDate"
+                name="incomeDate"
+                required
+                class="form-input">
             </div>
           </div>
 
+          <!-- Categoría - AQUÍ SE CARGAN DINÁMICAMENTE -->
           <div class="form-group">
-            <label for="metodoPago">Método de pago:</label>
-            <div class="select-container">
-              <select id="metodoPago" name="metodoPago">
-                <option value="">Seleccione el método</option>
-                <option value="efectivo">Efectivo</option>
-                <option value="transferencia">Transferencia</option>
-                <option value="cheque">Cheque</option>
-                <option value="tarjeta_credito">Tarjeta de Crédito</option>
-                <option value="otro">Otro</option>
-              </select>
-              <span class="select-arrow">▼</span>
-            </div>
-          </div>
-        </div>
+            <label class="form-label">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                <line x1="7" y1="7" x2="7.01" y2="7"></line>
+              </svg>
+              Categoría *
+            </label>
 
-        <!-- Right Column -->
-        <div class="form-column">
-          <div class="form-group">
-            <label for="monto">Monto:</label>
-            <div class="input-container">
-              <input type="number" id="monto" name="monto" step="0.01" min="0" placeholder="Escriba un monto">
+            <!-- Mostrar loading mientras cargan las categorías -->
+            <div *ngIf="isLoadingCategorias" style="padding: 0.75rem; text-align: center; color: #64748b;">
+              Cargando categorías...
+            </div>
+
+            <!-- Select con categorías dinámicas -->
+            <select
+              [(ngModel)]="nuevoIngreso.incomeCategoryId"
+              name="category"
+              required
+              class="form-input"
+              [disabled]="isLoadingCategorias">
+              <option value="0">Seleccione una categoría</option>
+              <option
+                *ngFor="let categoria of categoriasIngreso"
+                [value]="categoria.categoryId">
+                {{ categoria.name }} - {{ categoria.description }}
+              </option>
+            </select>
+
+            <!-- Mensaje si no hay categorías -->
+            <div *ngIf="!isLoadingCategorias && categoriasIngreso.length === 0"
+                 style="padding: 0.75rem; text-align: center; color: #ef4444;">
+              No hay categorías de ingreso disponibles
             </div>
           </div>
 
+          <!-- Descripción -->
           <div class="form-group">
-            <label for="descripcion">Descripción:</label>
-            <div class="textarea-container">
-              <textarea id="descripcion" name="descripcion" placeholder="Descripción" rows="4"></textarea>
-            </div>
+            <label class="form-label">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+              </svg>
+              Descripción *
+            </label>
+            <textarea
+              [(ngModel)]="nuevoIngreso.description"
+              name="description"
+              placeholder="Describe el ingreso..."
+              rows="4"
+              required
+              class="form-input"></textarea>
           </div>
 
-          <div class="form-group">
-            <label for="notas">Notas adicionales:</label>
-            <div class="textarea-container">
-              <textarea id="notas" name="notas" placeholder="Detalle adicional" rows="4"></textarea>
-            </div>
+          <!-- Buttons -->
+          <div class="button-group">
+            <button type="submit" class="btn-primary" [disabled]="isLoading">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                <polyline points="7 3 7 8 15 8"></polyline>
+              </svg>
+              {{ isLoading ? 'Guardando...' : 'Guardar Ingreso' }}
+            </button>
+            <button type="button" class="btn-secondary" (click)="limpiarFormulario()" [disabled]="isLoading">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+              Limpiar
+            </button>
           </div>
-        </div>
+        </form>
       </div>
 
-      <!-- Save Button -->
-      <div class="form-actions">
-        <button type="submit" class="btn-guardar">Guardar</button>
+      <!-- Info Card -->
+      <div class="info-card">
+        <p>
+          <span class="tip-badge">💡 Tip:</span> Asegúrate de llenar todos los campos marcados con * para registrar tu ingreso correctamente.
+        </p>
+        <p style="margin-top: 0.5rem;">
+          <span class="tip-badge">📊</span> Tienes {{ categoriasIngreso.length }} categorías de ingreso disponibles.
+        </p>
       </div>
-    </form>
+    </div>
   </div>
-</div>
+</body>

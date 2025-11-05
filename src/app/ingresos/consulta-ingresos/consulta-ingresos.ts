@@ -2,9 +2,10 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { CategoriaGasto } from '../../models/models-module';
-import { CategoriasService } from '../../services/categorias.service';
+
+import { IngresosService } from '../../services/ingresos.service';
 import { ExportService } from '../../services/export.service';
+import { income } from '../../interface/income.interface';
 
 interface CalendarDay {
   day: number;
@@ -23,27 +24,28 @@ interface CalendarDay {
 })
 export class ConsultaIngresos implements OnInit {
   // Servicios inyectados
-  private categoriasService = inject(CategoriasService);
+  private ingresosService = inject(IngresosService);
   private exportService = inject(ExportService);
 
-  // Datos de categorías dinámicas
-  categoriasDisponibles: CategoriaGasto[] = [];
-
-  // Mock data for the table
-  ingresos = [
-    { fecha: '27-05-2025', categoria: 'Salario', monto: '2.500.000', descripcion: 'Pago mensual de nómina' },
-    { fecha: '15-06-2025', categoria: 'Freelance', monto: '800.000', descripcion: 'Proyecto de desarrollo web' },
-    { fecha: '10-07-2025', categoria: 'Inversión', monto: '150.000', descripcion: 'Dividendos de acciones' },
-    { fecha: '05-08-2025', categoria: 'Venta', monto: '300.000', descripcion: 'Venta de productos usados' },
-    { fecha: '20-08-2025', categoria: 'Regalo', monto: '100.000', descripcion: 'Regalo de cumpleaños' },
-  ];
+  // Datos de ingresos desde el servicio
+  ingresos: income[] = [];
+  ingresosFiltrados: income[] = [];
 
   // Filtros
   categoriaSeleccionada: string = '';
   montoFiltro: number | null = null;
+  descripcionFiltro: string = '';
 
-  // Ingresos filtrados
-  ingresosFiltrados = [...this.ingresos];
+  // Estados de carga y mensajes
+  loading: boolean = false;
+  error: string = '';
+  mensaje: string = '';
+
+  // Variables para el modal de edición
+  modalVisible: boolean = false;
+  ingresoEditando: income | null = null;
+  nuevaDescripcion: string = '';
+  nuevoMonto: number = 0;
 
   // Date picker properties
   selectedDate: Date | null = null;
@@ -52,11 +54,11 @@ export class ConsultaIngresos implements OnInit {
   currentDate: Date = new Date();
   currentMonth: number = new Date().getMonth();
   currentYear: number = new Date().getFullYear();
-  
+
   dayHeaders: string[] = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
   calendarDays: CalendarDay[] = [];
   tempSelectedDate: Date | null = null;
-  
+
   monthNames: string[] = [
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
@@ -68,43 +70,139 @@ export class ConsultaIngresos implements OnInit {
   }
 
   ngOnInit() {
-    this.cargarCategorias();
+    this.cargarIngresos();
   }
 
-  // Método para cargar categorías desde el servicio
-  cargarCategorias() {
-    this.categoriasService.obtenerCategorias().subscribe({
-      next: (categorias) => {
-        this.categoriasDisponibles = categorias;
-        console.log('Categorías cargadas en consulta-ingresos:', categorias);
+  // Cargar ingresos desde el servicio
+  cargarIngresos(): void {
+    this.loading = true;
+    this.error = '';
+    this.mensaje = '';
+
+    this.ingresosService.getIngresos().subscribe({
+      next: (data: income[]) => {
+        this.ingresos = data;
+        this.ingresosFiltrados = data;
+        this.loading = false;
+        console.log('Ingresos cargados:', data);
       },
-      error: (error) => {
-        console.error('Error al cargar categorías:', error);
-        // Fallback a categorías por defecto si hay error
-        this.categoriasDisponibles = this.getCategoriasPorDefecto();
+      error: (err) => {
+        console.error('Error al cargar ingresos:', err);
+        this.error = 'Error al cargar los ingresos. Intenta de nuevo.';
+        this.loading = false;
       }
     });
   }
 
-  // Método para obtener categorías por defecto (fallback)
-  private getCategoriasPorDefecto(): CategoriaGasto[] {
-    return [
-      { id: 1, nombre: 'Alimentación', icono: 'restaurant', descripcion: 'Comidas y bebidas', color: '#FF6B6B' },
-      { id: 2, nombre: 'Transporte', icono: 'directions_car', descripcion: 'Gasolina, transporte público', color: '#4ECDC4' },
-      { id: 3, nombre: 'Vivienda', icono: 'home', descripcion: 'Alquiler, servicios públicos', color: '#45B7D1' },
-      { id: 4, nombre: 'Salud', icono: 'local_hospital', descripcion: 'Medicinas, consultas médicas', color: '#96CEB4' },
-      { id: 5, nombre: 'Educación', icono: 'school', descripcion: 'Cursos, libros, materiales', color: '#FFEAA7' },
-      { id: 6, nombre: 'Entretenimiento', icono: 'movie', descripcion: 'Cine, juegos, hobbies', color: '#DDA0DD' },
-      { id: 7, nombre: 'Ropa', icono: 'checkroom', descripcion: 'Vestimenta y accesorios', color: '#FFB6C1' },
-      { id: 8, nombre: 'Tecnología', icono: 'computer', descripcion: 'Dispositivos, software', color: '#98D8C8' },
-      { id: 9, nombre: 'Otros', icono: 'category', descripcion: 'Gastos diversos', color: '#F7DC6F' }
-    ];
+  // ===== MODAL DE EDICIÓN =====
+
+  abrirModal(ingreso: income): void {
+    this.ingresoEditando = { ...ingreso };
+    this.nuevaDescripcion = ingreso.description;
+    this.nuevoMonto = ingreso.amount;
+    this.modalVisible = true;
   }
 
-  // Método para obtener el valor del select (formato consistente)
-  getValorCategoria(categoria: CategoriaGasto): string {
-    return categoria.nombre.toLowerCase().replace(/\s+/g, '_');
+  cerrarModal(): void {
+    this.modalVisible = false;
+    this.ingresoEditando = null;
   }
+
+  guardarCambios(): void {
+    if (!this.ingresoEditando || !this.ingresoEditando.incomeId) return;
+
+    const ingresoActualizado: income = {
+      ...this.ingresoEditando,
+      description: this.nuevaDescripcion,
+      amount: this.nuevoMonto
+    };
+
+    this.loading = true;
+    this.ingresosService.updateIngreso(this.ingresoEditando.incomeId, ingresoActualizado).subscribe({
+      next: () => {
+        this.mensaje = '✅ Ingreso actualizado correctamente.';
+        this.cerrarModal();
+        this.cargarIngresos();
+      },
+      error: (err) => {
+        console.error('Error al actualizar ingreso:', err);
+        this.error = '❌ No se pudo actualizar el ingreso.';
+        this.loading = false;
+      }
+    });
+  }
+
+  eliminarIngreso(ingreso: income): void {
+    if (!ingreso.incomeId) return;
+
+    const confirmacion = confirm(`🗑️ ¿Seguro que deseas eliminar el ingreso "${ingreso.description}"?`);
+    if (!confirmacion) return;
+
+    this.loading = true;
+    this.ingresosService.deleteIngreso(ingreso.incomeId).subscribe({
+      next: () => {
+        this.mensaje = '🗑️ Ingreso eliminado correctamente.';
+        this.cargarIngresos();
+      },
+      error: (err) => {
+        console.error('Error al eliminar ingreso:', err);
+        this.error = '❌ No se pudo eliminar el ingreso.';
+        this.loading = false;
+      }
+    });
+  }
+
+  // ===== CÁLCULOS =====
+
+  calcularTotal(): number {
+    return this.ingresosFiltrados
+      .filter(ingreso => ingreso.active !== false)
+      .reduce((sum, ingreso) => sum + ingreso.amount, 0);
+  }
+
+  calcularPromedio(): number {
+    const activos = this.ingresosFiltrados.filter(i => i.active !== false);
+    return activos.length ? this.calcularTotal() / activos.length : 0;
+  }
+
+  // ===== FILTROS =====
+
+  aplicarFiltros(): void {
+    this.ingresosFiltrados = this.ingresos.filter(ingreso => {
+      // Filtro por descripción
+      const coincideDescripcion = this.descripcionFiltro
+        ? ingreso.description.toLowerCase().includes(this.descripcionFiltro.toLowerCase())
+        : true;
+
+      // Filtro por categoría
+      const coincideCategoria = this.categoriaSeleccionada && this.categoriaSeleccionada !== ''
+        ? ingreso.incomeCategoryId === Number(this.categoriaSeleccionada)
+        : true;
+
+      // Filtro por monto
+      const coincideMonto = this.montoFiltro && this.montoFiltro > 0
+        ? ingreso.amount >= this.montoFiltro
+        : true;
+
+      // Filtro por fecha
+      const coincideFecha = this.selectedDate
+        ? new Date(ingreso.incomeDate).toISOString().split('T')[0] === this.selectedDate.toISOString().split('T')[0]
+        : true;
+
+      return coincideDescripcion && coincideCategoria && coincideMonto && coincideFecha;
+    });
+  }
+
+  limpiarFiltros(): void {
+    this.selectedDate = null;
+    this.selectedDateFormatted = '';
+    this.categoriaSeleccionada = '';
+    this.montoFiltro = null;
+    this.descripcionFiltro = '';
+    this.ingresosFiltrados = [...this.ingresos];
+  }
+
+  // ===== CALENDARIO =====
 
   get currentMonthName(): string {
     return this.monthNames[this.currentMonth];
@@ -198,47 +296,8 @@ export class ConsultaIngresos implements OnInit {
     return `${day} / ${month} / ${year}`;
   }
 
-  // Aplicar filtros
-  aplicarFiltros() {
-    this.ingresosFiltrados = this.ingresos.filter(ingreso => {
-      // Filtro por categoría
-      if (this.categoriaSeleccionada && this.categoriaSeleccionada !== 'Todas las categorías') {
-        if (ingreso.categoria !== this.categoriaSeleccionada) {
-          return false;
-        }
-      }
-
-      // Filtro por monto
-      if (this.montoFiltro && this.montoFiltro > 0) {
-        const montoIngreso = parseFloat(ingreso.monto.replace(/\./g, '').replace(',', '.'));
-        if (montoIngreso < this.montoFiltro) {
-          return false;
-        }
-      }
-
-      // Filtro por fecha (implementar cuando se conecte con servicios reales)
-      // if (this.selectedDate) {
-      //   // Lógica de filtro por fecha
-      // }
-
-      return true;
-    });
-  }
-
-  // Limpiar filtros
-  limpiarFiltros() {
-    this.selectedDate = null;
-    this.selectedDateFormatted = '';
-    this.categoriaSeleccionada = '';
-    this.montoFiltro = null;
-    this.ingresosFiltrados = [...this.ingresos];
-  }
-
   // ===== EXPORT METHODS =====
 
-  /**
-   * Exporta los ingresos filtrados a Excel
-   */
   exportarAExcel(): void {
     try {
       this.exportService.exportIngresosToExcel(this.ingresosFiltrados);
@@ -248,9 +307,6 @@ export class ConsultaIngresos implements OnInit {
     }
   }
 
-  /**
-   * Exporta los ingresos filtrados a PDF
-   */
   exportarAPDF(): void {
     try {
       this.exportService.exportIngresosToPDF(this.ingresosFiltrados);

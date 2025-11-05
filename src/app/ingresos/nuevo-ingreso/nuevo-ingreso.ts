@@ -1,184 +1,148 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { CategoriaGasto } from '../../models/models-module';
-import { CategoriasService } from '../../services/categorias.service';
+import { RouterModule, Router } from '@angular/router';
 
-interface CalendarDay {
-  day: number;
-  date: Date;
-  disabled: boolean;
-  isToday: boolean;
-  isSelected: boolean;
-}
+import { IngresosService } from '../../services/ingresos.service';
+import { CategoriasService } from '../../services/categorias.service';
+import { income } from '../../interface/income.interface';
+import { CategoriaAPI } from '../../interface/categories.interface';
 
 @Component({
   selector: 'app-nuevo-ingreso',
+  standalone: true,
   imports: [FormsModule, CommonModule, RouterModule],
   templateUrl: './nuevo-ingreso.html',
   styleUrl: './nuevo-ingreso.css'
 })
 export class NuevoIngreso implements OnInit {
-  // Servicios inyectados
+
+  nuevoIngreso: income = {
+    amount: 0,
+    incomeCategoryId: 0,
+    incomeDate: new Date(),
+    description: '',
+    userId: 1
+  };
+
+  categorias: CategoriaAPI[] = [];
+  categoriasIngreso: CategoriaAPI[] = []; // Solo categorías de tipo INCOME
+
+  isLoading: boolean = false;
+  isLoadingCategorias: boolean = false;
+  errorMessage: string = '';
+
+  private ingresosService = inject(IngresosService);
   private categoriasService = inject(CategoriasService);
-
-  // Datos de categorías dinámicas
-  categoriasDisponibles: CategoriaGasto[] = [];
-  categoriaSeleccionada: string = '';
-
-  // Fecha seleccionada
-  selectedDate: Date | null = null;
-  selectedDateFormatted: string = '';
-  
-  // Date picker
-  showDatePicker: boolean = false;
-  currentDate: Date = new Date();
-  currentMonth: number = new Date().getMonth();
-  currentYear: number = new Date().getFullYear();
-  
-  dayHeaders: string[] = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-  calendarDays: CalendarDay[] = [];
-  tempSelectedDate: Date | null = null;
-  
-  monthNames: string[] = [
-    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-  ];
-
-  constructor() {
-    this.currentYear = new Date().getFullYear();
-    this.generateCalendar();
-  }
+  private router = inject(Router);
 
   ngOnInit() {
     this.cargarCategorias();
   }
 
-  // Método para cargar categorías desde el servicio
   cargarCategorias() {
+  this.isLoadingCategorias = true;
+
+  // Cargar solo categorías de tipo INCOME
+  this.categoriasService.obtenerCategoriasPorTipo('INCOME').subscribe({
+    next: (categorias) => {
+      this.categoriasIngreso = categorias.filter(cat => cat.type); // Quita el && cat.active
+      console.log('Categorías de ingreso cargadas:', this.categoriasIngreso);
+      this.isLoadingCategorias = false;
+    },
+    error: (error) => {
+      console.error('Error al cargar categorías:', error);
+      this.errorMessage = 'Error al cargar las categorías';
+      this.isLoadingCategorias = false;
+    }
+  });
+
+
+    // Opción 2: Si quieres cargar todas y filtrar
+    /*
     this.categoriasService.obtenerCategorias().subscribe({
       next: (categorias) => {
-        this.categoriasDisponibles = categorias;
-        console.log('Categorías cargadas en nuevo-ingreso:', categorias);
+        // Filtrar solo categorías activas de tipo INCOME
+        this.categoriasIngreso = categorias.filter(cat =>
+          cat.type === 'INCOME' && cat.active
+        );
+        console.log('Categorías de ingreso cargadas:', this.categoriasIngreso);
+        this.isLoadingCategorias = false;
       },
       error: (error) => {
         console.error('Error al cargar categorías:', error);
-        // Fallback a categorías por defecto si hay error
-        this.categoriasDisponibles = this.getCategoriasPorDefecto();
+        this.errorMessage = 'Error al cargar las categorías';
+        this.isLoadingCategorias = false;
+      }
+    });
+    */
+  }
+
+  createIngreso() {
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    if (!this.validarIngreso()) {
+      this.isLoading = false;
+      return;
+    }
+
+    console.log('Datos a enviar:', this.nuevoIngreso);
+
+    this.ingresosService.createIngreso(this.nuevoIngreso).subscribe({
+      next: (ingresoCreado) => {
+        console.log('Ingreso creado exitosamente:', ingresoCreado);
+        this.isLoading = false;
+        alert('¡Ingreso creado exitosamente!');
+        this.router.navigate(['/ingresos']);
+      },
+      error: (error) => {
+        console.error('Error completo:', error);
+        if (error.error && typeof error.error === 'object') {
+          console.error('Detalles del error:', error.error);
+          this.errorMessage = error.error.message || 'Error al crear el ingreso';
+        } else {
+          this.errorMessage = 'Error al crear el ingreso. Por favor intenta nuevamente.';
+        }
+        this.isLoading = false;
       }
     });
   }
 
-  // Método para obtener categorías por defecto (fallback)
-  private getCategoriasPorDefecto(): CategoriaGasto[] {
-    return [
-      { id: 1, nombre: 'Alimentación', icono: 'restaurant', descripcion: 'Comidas y bebidas', color: '#FF6B6B' },
-      { id: 2, nombre: 'Transporte', icono: 'directions_car', descripcion: 'Gasolina, transporte público', color: '#4ECDC4' },
-      { id: 3, nombre: 'Vivienda', icono: 'home', descripcion: 'Alquiler, servicios públicos', color: '#45B7D1' },
-      { id: 4, nombre: 'Salud', icono: 'local_hospital', descripcion: 'Medicinas, consultas médicas', color: '#96CEB4' },
-      { id: 5, nombre: 'Educación', icono: 'school', descripcion: 'Cursos, libros, materiales', color: '#FFEAA7' },
-      { id: 6, nombre: 'Entretenimiento', icono: 'movie', descripcion: 'Cine, juegos, hobbies', color: '#DDA0DD' },
-      { id: 7, nombre: 'Ropa', icono: 'checkroom', descripcion: 'Vestimenta y accesorios', color: '#FFB6C1' },
-      { id: 8, nombre: 'Tecnología', icono: 'computer', descripcion: 'Dispositivos, software', color: '#98D8C8' },
-      { id: 9, nombre: 'Otros', icono: 'category', descripcion: 'Gastos diversos', color: '#F7DC6F' }
-    ];
-  }
-
-  // Método para obtener el valor del select (formato consistente)
-  getValorCategoria(categoria: CategoriaGasto): string {
-    return categoria.nombre.toLowerCase().replace(/\s+/g, '_');
-  }
-
-  get currentMonthName(): string {
-    return this.monthNames[this.currentMonth];
-  }
-
-  openDatePicker() {
-    this.showDatePicker = true;
-    this.tempSelectedDate = this.selectedDate;
-    this.generateCalendar();
-  }
-
-  closeDatePicker() {
-    this.showDatePicker = false;
-    this.tempSelectedDate = null;
-  }
-
-  previousMonth() {
-    if (this.currentMonth === 0) {
-      this.currentMonth = 11;
-      this.currentYear--;
-    } else {
-      this.currentMonth--;
+  validarIngreso(): boolean {
+    if (!this.nuevoIngreso.amount || this.nuevoIngreso.amount <= 0) {
+      this.errorMessage = 'El monto debe ser mayor a 0';
+      return false;
     }
-    this.generateCalendar();
-  }
-
-  nextMonth() {
-    if (this.currentMonth === 11) {
-      this.currentMonth = 0;
-      this.currentYear++;
-    } else {
-      this.currentMonth++;
+    if (!this.nuevoIngreso.incomeCategoryId || this.nuevoIngreso.incomeCategoryId === 0) {
+      this.errorMessage = 'Debe seleccionar una categoría';
+      return false;
     }
-    this.generateCalendar();
-  }
-
-  selectDate(day: CalendarDay) {
-    if (!day.disabled) {
-      this.tempSelectedDate = day.date;
-      this.generateCalendar();
+    if (!this.nuevoIngreso.incomeDate) {
+      this.errorMessage = 'Debe seleccionar una fecha';
+      return false;
     }
-  }
-
-  confirmDate() {
-    if (this.tempSelectedDate) {
-      this.selectedDate = new Date(this.tempSelectedDate);
-      this.selectedDateFormatted = this.formatDate(this.selectedDate);
+    if (!this.nuevoIngreso.description || !this.nuevoIngreso.description.trim()) {
+      this.errorMessage = 'La descripción es obligatoria';
+      return false;
     }
-    this.closeDatePicker();
+    return true;
   }
 
-  preventTyping(event: KeyboardEvent) {
-    event.preventDefault();
+  limpiarFormulario() {
+    this.nuevoIngreso = {
+      amount: 0,
+      incomeCategoryId: 0,
+      incomeDate: new Date(),
+      description: '',
+      userId: 1
+    };
+    this.errorMessage = '';
   }
 
-  private generateCalendar() {
-    this.calendarDays = [];
-    const today = new Date();
-    const firstDay = new Date(this.currentYear, this.currentMonth, 1);
-    const startDate = new Date(firstDay);
-    startDate.setDate(startDate.getDate() - firstDay.getDay());
-
-    for (let i = 0; i < 42; i++) {
-      const date = new Date(startDate);
-      date.setDate(startDate.getDate() + i);
-
-      const isToday = this.isSameDay(date, today);
-      const isDisabled = date < today || date.getMonth() !== this.currentMonth;
-      const isSelected = this.tempSelectedDate ? this.isSameDay(date, this.tempSelectedDate) : false;
-
-      this.calendarDays.push({
-        day: date.getDate(),
-        date: new Date(date),
-        disabled: isDisabled,
-        isToday: isToday,
-        isSelected: isSelected
-      });
-    }
-  }
-
-  private isSameDay(date1: Date, date2: Date): boolean {
-    return date1.getDate() === date2.getDate() &&
-           date1.getMonth() === date2.getMonth() &&
-           date1.getFullYear() === date2.getFullYear();
-  }
-
-  private formatDate(date: Date): string {
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day} / ${month} / ${year}`;
+  // Método auxiliar para obtener el nombre de una categoría
+  getNombreCategoria(categoryId: number): string {
+    const categoria = this.categoriasIngreso.find(cat => cat.categoryId === categoryId);
+    return categoria ? categoria.name : 'Sin categoría';
   }
 }

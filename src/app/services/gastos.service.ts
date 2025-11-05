@@ -1,7 +1,6 @@
-
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, catchError, throwError } from 'rxjs';
+import { Observable } from 'rxjs';
 import { GastoResponse, Gasto } from '../interface/gasto.interface';
 
 @Injectable({
@@ -9,17 +8,28 @@ import { GastoResponse, Gasto } from '../interface/gasto.interface';
 })
 export class GastosService {
   private http = inject(HttpClient);
-
+  private apiUrl = 'http://localhost:8082/api/v1/expenses'; // Base URL
 
   // 🔹 GET: Listar todos los gastos
-getGastos(): Observable<GastoResponse[]> {
-  return this.http.get<GastoResponse[]>('http://localhost:8080/api/v1/expenses');
+  getGastos(): Observable<GastoResponse[]> {
+    return this.http.get<GastoResponse[]>(this.apiUrl);
+  }
+
+  // 🔹 POST: Crear un nuevo gasto
+  createGasto(gasto: Gasto): Observable<Gasto> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    return this.http.post<Gasto>(this.apiUrl, gasto, { headers });
+  }
+
+  // 🔹 PUT: Actualizar un gasto existente
+  updateGasto(id: number, gasto: Gasto): Observable<Gasto> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    return this.http.put<Gasto>(`${this.apiUrl}/${id}`, gasto, { headers });
+  }
+
+  // 🔹 DELETE: Eliminar un gasto por ID
+  deleteGasto(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
 }
 
-
-createGasto( Gasto: Gasto): Observable<Gasto> {
-const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
-return this.http.post<Gasto>( 'http://localhost:8080/api/v1/expenses' ,Gasto,{headers});
-}
-
-}

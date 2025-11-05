@@ -4,105 +4,93 @@
     <div class="header-content">
       <div class="title-section">
         <h1>Nueva Categoría</h1>
-        <p>Crea una nueva categoría personalizada para tus gastos</p>
+        <p>Crea una nueva categoría para tus gastos e ingresos</p>
       </div>
-      <button class="btn-regresar" (click)="regresar()">Regresar</button>
+      <button class="btn-regresar" (click)="regresar()">
+        Regresar
+      </button>
     </div>
+  </div>
+
+  <!-- Mensajes de error y éxito -->
+  <div class="alert alert-error" *ngIf="mensajeError">
+    <span class="material-icons">error</span>
+    {{ mensajeError }}
+    <button class="close-btn" (click)="limpiarMensajes()">×</button>
+  </div>
+
+  <div class="alert alert-success" *ngIf="mensajeExito">
+    <span class="material-icons">check_circle</span>
+    {{ mensajeExito }}
   </div>
 
   <!-- Form Section -->
   <div class="form-container">
     <form [formGroup]="categoriaForm" (ngSubmit)="guardarCategoria()" class="categorias-form">
-      <div class="form-grid">
-        <!-- Left Column -->
-        <div class="form-column">
-          <div class="form-group">
-            <label for="nombre">Nombre de la categoría *</label>
-            <div class="input-container">
-              <input 
-                type="text" 
-                id="nombre" 
-                formControlName="nombre"
-                placeholder="Ej: Supermercado, Gasolina, etc."
-                [class.error]="hasError('nombre')">
-            </div>
-            <div class="error-message" *ngIf="hasError('nombre')">
-              {{ getErrorMessage('nombre') }}
-            </div>
-          </div>
 
-          <div class="form-group">
-            <label for="icono">Icono *</label>
-            <div class="icono-selector">
-              <div class="icono-preview">
-                <span class="icono-seleccionado material-icons">{{ categoriaForm.get('icono')?.value }}</span>
-                <span class="icono-nombre">{{ categoriaForm.get('nombre')?.value || 'Nombre' }}</span>
-              </div>
-              <div class="iconos-grid">
-                <button 
-                  type="button" 
-                  *ngFor="let icono of iconosDisponibles" 
-                  class="icono-option"
-                  [class.selected]="categoriaForm.get('icono')?.value === icono"
-                  (click)="categoriaForm.patchValue({icono: icono})">
-                  <span class="material-icons">{{ icono }}</span>
-                </button>
-              </div>
-            </div>
-          </div>
+      <!-- Nombre -->
+      <div class="form-group">
+        <label for="nombre">Nombre de la categoría *</label>
+        <div class="input-container">
+          <input
+            type="text"
+            id="nombre"
+            formControlName="nombre"
+            placeholder="Ej: Supermercado, Gasolina, Salario, etc."
+            [class.error]="hasError('nombre')">
         </div>
-
-        <!-- Right Column -->
-        <div class="form-column">
-          <div class="form-group">
-            <label for="color">Color de la categoría *</label>
-            <div class="color-selector">
-              <div class="color-preview" [style.background-color]="categoriaForm.get('color')?.value">
-                <span class="color-text">{{ categoriaForm.get('nombre')?.value || 'Categoría' }}</span>
-              </div>
-              <input 
-                type="color" 
-                id="color" 
-                formControlName="color"
-                class="color-input">
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="descripcion">Descripción (opcional)</label>
-            <div class="textarea-container">
-              <textarea 
-                id="descripcion" 
-                formControlName="descripcion"
-                placeholder="Describe brevemente esta categoría"
-                rows="4"></textarea>
-            </div>
-            <div class="error-message" *ngIf="hasError('descripcion')">
-              {{ getErrorMessage('descripcion') }}
-            </div>
-          </div>
+        <div class="error-message" *ngIf="hasError('nombre')">
+          {{ getErrorMessage('nombre') }}
         </div>
       </div>
 
-      <!-- Preview Section -->
-      <div class="preview-section">
-        <h3>Vista previa:</h3>
-        <div class="categoria-preview">
-          <div class="preview-card" [style.border-left-color]="categoriaForm.get('color')?.value">
-            <span class="preview-icon material-icons">{{ categoriaForm.get('icono')?.value }}</span>
-            <div class="preview-content">
-              <h4>{{ categoriaForm.get('nombre')?.value || 'Nombre de la categoría' }}</h4>
-              <p *ngIf="categoriaForm.get('descripcion')?.value">{{ categoriaForm.get('descripcion')?.value }}</p>
-            </div>
-          </div>
+      <!-- Tipo -->
+      <div class="form-group">
+        <label for="tipo">Tipo de categoría *</label>
+        <div class="tipo-selector">
+          <label class="tipo-option">
+            <input
+              type="radio"
+              formControlName="tipo"
+              value="EXPENSE">
+            <span class="tipo-label">
+              <span class="material-icons">shopping_cart</span>
+              Gasto
+            </span>
+          </label>
+          <label class="tipo-option">
+            <input
+              type="radio"
+              formControlName="tipo"
+              value="INCOME">
+            <span class="tipo-label">
+              <span class="material-icons">trending_up</span>
+              Ingreso
+            </span>
+          </label>
         </div>
       </div>
 
-      <!-- Save Button -->
+      <!-- Botones de acción -->
       <div class="form-actions">
-        <button type="button" class="btn-cancelar" (click)="regresar()">Cancelar</button>
-        <button type="submit" class="btn-guardar" [disabled]="!categoriaForm.valid">
-          Crear Categoría
+        <button
+          type="button"
+          class="btn-cancelar"
+          (click)="regresar()">
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          class="btn-guardar"
+          [disabled]="!categoriaForm.valid || guardando">
+          <span *ngIf="!guardando">
+            <span class="material-icons">save</span>
+            Crear Categoría
+          </span>
+          <span *ngIf="guardando">
+            <span class="material-icons spinner">refresh</span>
+            Guardando...
+          </span>
         </button>
       </div>
     </form>

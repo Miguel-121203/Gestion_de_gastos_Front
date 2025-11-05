@@ -1,24 +1,37 @@
-<div class="ingresos-container">
-  <!-- Header Section -->
+<div class="consulta-ingresos-container">
+  <!-- ====== ENCABEZADO ====== -->
   <div class="page-header">
-    <div class="header-content">
-      <div class="title-section">
-        <h1>Consulta de Ingresos</h1>
-      </div>
-      <button class="btn-regresar" routerLink="/ingresos">Regresar</button>
-    </div>
+    <h1 class="title">Consulta de Ingresos</h1>
+    <button class="btn-regresar" routerLink="/ingresos">Regresar</button>
   </div>
 
-  <!-- Filtros Section -->
-  <div class="form-container">
+  <!-- ====== MENSAJES ====== -->
+  <div class="mensaje-exito" *ngIf="mensaje">{{ mensaje }}</div>
+  <div class="mensaje-error" *ngIf="error">{{ error }}</div>
+
+  <!-- ====== FILTROS ====== -->
+  <div class="filtros-section">
     <div class="filtros-grid">
+      <!-- Filtro por descripción -->
+      <div class="filtro-group">
+        <label for="descripcion-filtro">Descripción:</label>
+        <input
+          type="text"
+          id="descripcion-filtro"
+          class="input-field"
+          [(ngModel)]="descripcionFiltro"
+          placeholder="Buscar por descripción"
+          (input)="aplicarFiltros()">
+      </div>
+
       <!-- Filtro por fecha -->
       <div class="filtro-group">
-        <label for="fecha-filtro">Filtrar por fecha:</label>
+        <label for="fecha-filtro">Fecha:</label>
         <div class="input-container">
-          <input 
-            type="text" 
-            id="fecha-filtro" 
+          <input
+            type="text"
+            id="fecha-filtro"
+            class="input-field"
             [(ngModel)]="selectedDateFormatted"
             (click)="openDatePicker()"
             (keydown)="preventTyping($event)"
@@ -28,7 +41,7 @@
             📅
           </button>
         </div>
-        
+
         <!-- Date Picker Modal -->
         <div class="date-picker-modal" *ngIf="showDatePicker" (click)="closeDatePicker()">
           <div class="date-picker-content" (click)="$event.stopPropagation()">
@@ -36,19 +49,19 @@
               <h3>Seleccionar Fecha</h3>
               <button type="button" class="close-btn" (click)="closeDatePicker()">×</button>
             </div>
-            
+
             <div class="date-picker-body">
               <div class="month-navigation">
                 <button type="button" (click)="previousMonth()">‹</button>
                 <span class="current-month">{{ currentMonthName }} {{ currentYear }}</span>
                 <button type="button" (click)="nextMonth()">›</button>
               </div>
-              
+
               <div class="calendar-grid">
                 <div class="day-header" *ngFor="let day of dayHeaders">{{ day }}</div>
-                <div 
-                  class="calendar-day" 
-                  *ngFor="let day of calendarDays" 
+                <div
+                  class="calendar-day"
+                  *ngFor="let day of calendarDays"
                   [class.disabled]="day.disabled"
                   [class.today]="day.isToday"
                   [class.selected]="day.isSelected"
@@ -57,7 +70,7 @@
                 </div>
               </div>
             </div>
-            
+
             <div class="date-picker-footer">
               <button type="button" class="btn-cancel" (click)="closeDatePicker()">Cancelar</button>
               <button type="button" class="btn-confirm" (click)="confirmDate()">Confirmar</button>
@@ -66,53 +79,68 @@
         </div>
       </div>
 
-      <!-- Filtro por categoria -->
-      <div class="filtro-group">
-        <label for="categoria-filtro">Filtrar por categoria:</label>
-        <div class="select-container">
-          <select id="categoria-filtro" [(ngModel)]="categoriaSeleccionada" (change)="aplicarFiltros()">
-            <option value="">Todas las categorías</option>
-            <option *ngFor="let categoria of categoriasDisponibles" 
-                    [value]="getValorCategoria(categoria)">
-              {{ categoria.nombre }}
-            </option>
-          </select>
-          <span class="select-arrow">▼</span>
-        </div>
-      </div>
-
       <!-- Filtro por monto -->
       <div class="filtro-group">
-        <label for="monto-filtro">Filtrar por monto:</label>
-        <div class="input-container">
-          <input type="number" id="monto-filtro" [(ngModel)]="montoFiltro" placeholder="Escriba un monto">
-        </div>
+        <label for="monto-filtro">Monto mínimo:</label>
+        <input
+          type="number"
+          id="monto-filtro"
+          class="input-field"
+          [(ngModel)]="montoFiltro"
+          placeholder="Monto mínimo"
+          (input)="aplicarFiltros()">
       </div>
     </div>
-    
+
     <!-- Botón de limpiar filtros -->
     <div class="filtros-actions">
       <button type="button" class="btn-limpiar" (click)="limpiarFiltros()">Limpiar Filtros</button>
     </div>
   </div>
 
-  <!-- Tabla Section -->
-  <div class="tabla-container">
+  <!-- ====== ESTADÍSTICAS ====== -->
+  <div class="estadisticas" *ngIf="!loading && ingresosFiltrados.length > 0">
+    <div class="stat-card">
+      <span class="stat-label">Total:</span>
+      <span class="stat-value">$ {{ calcularTotal() | number:'1.2-2' }}</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Promedio:</span>
+      <span class="stat-value">$ {{ calcularPromedio() | number:'1.2-2' }}</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Cantidad:</span>
+      <span class="stat-value">{{ ingresosFiltrados.length }}</span>
+    </div>
+  </div>
+
+  <!-- ====== LOADER ====== -->
+  <div class="loader" *ngIf="loading">Cargando ingresos...</div>
+
+  <!-- ====== TABLA ====== -->
+  <div class="table-wrapper" *ngIf="!loading">
     <table class="ingresos-table">
       <thead>
         <tr>
           <th>Fecha</th>
-          <th>Categoria</th>
-          <th>Monto</th>
           <th>Descripción</th>
+          <th>Monto</th>
+          <th>Acciones</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let ingreso of ingresosFiltrados">
-          <td>{{ ingreso.fecha }}</td>
-          <td>{{ ingreso.categoria }}</td>
-          <td class="monto-cell">{{ ingreso.monto }}</td>
-          <td>{{ ingreso.descripcion }}</td>
+        <tr *ngFor="let ingreso of ingresosFiltrados" [class.inactive]="ingreso.active === false">
+          <td>{{ ingreso.incomeDate | date:'dd/MM/yyyy' }}</td>
+          <td>{{ ingreso.description }}</td>
+          <td class="monto-cell">$ {{ ingreso.amount | number:'1.2-2' }}</td>
+          <td class="acciones-cell">
+            <button class="btn-accion editar" (click)="abrirModal(ingreso)" title="Editar">
+              ✏️
+            </button>
+            <button class="btn-accion eliminar" (click)="eliminarIngreso(ingreso)" title="Eliminar">
+              🗑️
+            </button>
+          </td>
         </tr>
         <tr *ngIf="ingresosFiltrados.length === 0">
           <td colspan="4" class="no-data">No se encontraron ingresos</td>
@@ -121,19 +149,47 @@
     </table>
   </div>
 
-  <!-- Botones de Exportación -->
-  <div class="export-section" *ngIf="ingresosFiltrados.length > 0">
+  <!-- ====== MODAL DE EDICIÓN ====== -->
+  <div class="modal-overlay" *ngIf="modalVisible" (click)="cerrarModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <h2>Editar Ingreso</h2>
+
+      <label for="modal-descripcion">Descripción:</label>
+      <input
+        type="text"
+        id="modal-descripcion"
+        class="input-field"
+        [(ngModel)]="nuevaDescripcion"
+        placeholder="Descripción del ingreso">
+
+      <label for="modal-monto">Monto:</label>
+      <input
+        type="number"
+        id="modal-monto"
+        class="input-field"
+        [(ngModel)]="nuevoMonto"
+        placeholder="Monto">
+
+      <div class="modal-actions">
+        <button class="btn-cancelar" (click)="cerrarModal()">Cancelar</button>
+        <button class="btn-guardar" (click)="guardarCambios()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== BOTONES DE EXPORTACIÓN ====== -->
+  <div class="export-section" *ngIf="!loading && ingresosFiltrados.length > 0">
     <div class="export-header">
       <h3>Exportar Datos</h3>
       <p>Descarga los ingresos filtrados en diferentes formatos</p>
     </div>
     <div class="export-buttons">
       <button class="btn-export btn-excel" (click)="exportarAExcel()">
-        <span class="material-icons">table_chart</span>
+        <span class="material-icons">📊</span>
         Exportar a Excel
       </button>
       <button class="btn-export btn-pdf" (click)="exportarAPDF()">
-        <span class="material-icons">picture_as_pdf</span>
+        <span class="material-icons">📄</span>
         Exportar a PDF
       </button>
     </div>
