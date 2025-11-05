@@ -1,244 +1,162 @@
-/* Dashboard component specific styles */
 .dashboard-container {
-  padding: 40px;
-  max-width: 1200px;
-  margin: 0 auto;
+  padding: 2rem;
+  background: #f4f7fc;
+  min-height: 100vh;
+  font-family: 'Poppins', sans-serif;
 }
 
-/* Tarjetas de Resumen */
+/* --- Tarjetas de resumen --- */
 .summary-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-  margin-bottom: 40px;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .summary-card {
-  background-color: white;
-  border: 1px solid #e1e5e9;
-  border-radius: 8px;
-  padding: 24px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: box-shadow 0.3s ease;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  padding: 1.5rem;
+  transition: transform 0.2s ease;
 }
 
 .summary-card:hover {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-5px);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #2563eb;
 }
 
 .card-header h3 {
-  font-size: 14px;
-  font-weight: 600;
-  color: #666;
-  margin: 0 0 8px 0;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  font-size: 1.1rem;
+  margin: 0;
 }
 
 .card-value {
-  font-size: 24px;
-  font-weight: 700;
-  color: #333;
-  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
 }
 
-/* Sección del Gráfico */
+/* --- Sección del gráfico --- */
 .chart-section {
-  background-color: white;
-  border: 1px solid #e1e5e9;
-  border-radius: 8px;
-  padding: 30px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.chart-header {
-  margin-bottom: 20px;
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
 }
 
 .chart-header h2 {
-  font-size: 24px;
-  font-weight: 700;
-  color: #333;
-  margin: 0 0 4px 0;
+  margin: 0;
+  color: #1e3a8a;
+  font-size: 1.4rem;
 }
 
 .chart-header p {
-  font-size: 14px;
-  color: #666;
-  margin: 0;
+  color: #64748b;
+  margin: 0 0 1rem 0;
 }
 
-/* Leyenda del Gráfico */
+/* --- Leyenda --- */
 .chart-legend {
   display: flex;
-  gap: 20px;
-  margin-bottom: 30px;
+  justify-content: flex-end;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .legend-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.4rem;
+  font-size: 0.9rem;
 }
 
 .legend-color {
-  width: 12px;
-  height: 12px;
-  border-radius: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
 }
 
-.legend-color.ingresos {
-  background-color: #28a745;
+.ingresos {
+  background: #22c55e;
 }
 
-.legend-color.gastos {
-  background-color: #dc3545;
+.gastos {
+  background: #ef4444;
 }
 
-.legend-item span {
-  font-size: 14px;
-  color: #333;
-  font-weight: 500;
-}
-
-/* Contenedor del Gráfico */
+/* --- Contenedor del gráfico --- */
 .chart-container {
   display: flex;
-  gap: 20px;
-  height: 300px;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 1rem;
+  position: relative;
+  padding: 1rem 0;
 }
 
 .chart-y-axis {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  width: 80px;
-  padding-right: 10px;
-}
-
-.y-label {
-  font-size: 12px;
-  color: #666;
-  text-align: right;
-  font-weight: 500;
+  height: 300px;
+  margin-right: 1.5rem;
+  font-size: 0.9rem;
+  color: #475569;
 }
 
 .chart-bars {
-  flex: 1;
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1.2rem;
   align-items: end;
-  gap: 8px;
-  height: 100%;
-  position: relative;
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  height: 300px;
 }
 
 .month-group {
-  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  height: 100%;
-}
-
-.month-label {
-  font-size: 12px;
-  color: #666;
-  margin-bottom: 10px;
-  font-weight: 500;
-  text-align: center;
+  gap: 0.5rem;
 }
 
 .bars-container {
   display: flex;
-  gap: 2px;
-  align-items: end;
-  height: calc(100% - 30px);
-  width: 100%;
+  align-items: flex-end;
+  gap: 6px;
+  height: 250px;
 }
 
 .bar {
-  flex: 1;
-  min-height: 2px;
-  border-radius: 2px 2px 0 0;
-  transition: opacity 0.3s ease;
-  cursor: pointer;
+  width: 18px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.ingresos-bar {
+  background: #22c55e;
+}
+
+.gastos-bar {
+  background: #ef4444;
 }
 
 .bar:hover {
   opacity: 0.8;
+  transform: scaleY(1.05);
 }
 
-.ingresos-bar {
-  background-color: #28a745;
-}
-
-.gastos-bar {
-  background-color: #dc3545;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .dashboard-container {
-    padding: 20px;
-  }
-  
-  .summary-cards {
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-  }
-  
-  .summary-card {
-    padding: 20px;
-  }
-  
-  .card-value {
-    font-size: 20px;
-  }
-  
-  .chart-section {
-    padding: 20px;
-  }
-  
-  .chart-header h2 {
-    font-size: 20px;
-  }
-  
-  .chart-container {
-    height: 250px;
-  }
-  
-  .chart-y-axis {
-    width: 60px;
-  }
-  
-  .y-label {
-    font-size: 10px;
-  }
-  
-  .month-label {
-    font-size: 10px;
-  }
-  
-  .chart-bars {
-    gap: 4px;
-  }
-}
-
-@media (max-width: 480px) {
-  .summary-cards {
-    grid-template-columns: 1fr;
-  }
-  
-  .chart-legend {
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .chart-container {
-    height: 200px;
-  }
-  
-  .chart-y-axis {
-    width: 50px;
-  }
+.month-label {
+  font-size: 0.85rem;
+  color: #334155;
 }

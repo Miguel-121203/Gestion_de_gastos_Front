@@ -1,4 +1,4 @@
-/* Inicio gastos component specific styles */
+/* Inicio ingresos component specific styles */
 
 .gastos-container {
   padding: 40px;
@@ -22,7 +22,7 @@
 .title-section h1 {
   font-size: 48px;
   font-weight: 700;
-  color: #333;
+  color: white;
   margin: 0;
 }
 
@@ -54,7 +54,7 @@
 }
 
 .option-button {
-  background-color: #014047;
+  background-color: #007bff; /* Azul principal coherente con el dashboard */
   color: white;
   border: none;
   padding: 20px 40px;
@@ -69,9 +69,9 @@
 }
 
 .option-button:hover {
-  background-color: #012a2f;
+  background-color: #0056b3;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(1, 64, 71, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
 }
 
 .option-button:active {
@@ -80,21 +80,24 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .gastos-container {
+  .ingresos-container {
     padding: 20px;
   }
-  
+
   .title-section h1 {
     font-size: 36px;
   }
-  
+
   .options-title {
     font-size: 24px;
   }
-  
+
   .option-button {
     min-width: 250px;
     padding: 16px 32px;
     font-size: 16px;
   }
 }
+
+
+

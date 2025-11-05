@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { CategoriaGasto } from '../../models/models-module';
+import { CategoriaRequest } from '../../interface/categories.interface';
 import { CategoriasService } from '../../services/categorias.service';
 
 @Component({
@@ -13,65 +13,70 @@ import { CategoriasService } from '../../services/categorias.service';
   styleUrl: './nueva-categoria.css'
 })
 export class NuevaCategoria implements OnInit {
-  categoriaForm: FormGroup;
-  iconosDisponibles = [
-    'restaurant', 'directions_car', 'home', 'local_hospital', 'school', 'movie', 'checkroom', 'computer', 'account_balance_wallet', 'credit_card',
-    'music_note', 'sports_esports', 'directions_run', 'flight', 'lunch_dining', 'local_cafe', 'shopping_cart', 'store', 'sports_soccer', 'phone_android',
-    'palette', 'build', 'eco', 'festival', 'emoji_events', 'menu_book', 'theater_comedy', 'beach_access', 'music_video', 'camera_alt'
-  ];
-  
+  categoriaForm!: FormGroup;
+
+  guardando = false;
+  mensajeError = '';
+  mensajeExito = '';
+
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private categoriasService = inject(CategoriasService);
 
-  constructor() {
+  ngOnInit() {
     this.categoriaForm = this.fb.group({
       nombre: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
-      icono: ['restaurant', [Validators.required]],
-      descripcion: ['', [Validators.maxLength(200)]],
-      color: ['#014047', [Validators.required]]
+      tipo: ['EXPENSE', [Validators.required]]
     });
   }
 
-  ngOnInit() {
-    // Inicialización adicional si es necesaria
-  }
-
-  // Método para guardar la nueva categoría
   guardarCategoria() {
     if (this.categoriaForm.valid) {
-      const nuevaCategoria: CategoriaGasto = {
-        id: 0, // Se asignará en el servicio
-        nombre: this.categoriaForm.value.nombre.trim(),
-        icono: this.categoriaForm.value.icono,
-        descripcion: this.categoriaForm.value.descripcion?.trim() || '',
-        color: this.categoriaForm.value.color
+      this.guardando = true;
+      this.mensajeError = '';
+      this.mensajeExito = '';
+      this.categoriaForm.disable();
+
+      const request: CategoriaRequest = {
+        name: this.categoriaForm.value.nombre.trim(),
+        type: this.categoriaForm.value.tipo
       };
 
-      this.categoriasService.crearCategoria(nuevaCategoria).subscribe({
+      this.categoriasService.crearCategoria(request).subscribe({
         next: (categoria) => {
           console.log('Categoría creada exitosamente:', categoria);
-          this.router.navigate(['/categorias']);
+          this.mensajeExito = 'Categoría creada exitosamente';
+          this.guardando = false;
+
+          setTimeout(() => {
+            this.router.navigate(['/categorias']);
+          }, 1500);
         },
         error: (error) => {
           console.error('Error al crear categoría:', error);
-          // Aquí podrías mostrar un mensaje de error al usuario
+          this.mensajeError = error.message || 'Error al crear la categoría. Por favor, intenta nuevamente.';
+          this.guardando = false;
+          this.categoriaForm.enable();
         }
       });
     } else {
-      // Marcar todos los campos como tocados para mostrar errores
       Object.keys(this.categoriaForm.controls).forEach(key => {
         this.categoriaForm.get(key)?.markAsTouched();
       });
+      this.mensajeError = 'Por favor, completa todos los campos requeridos correctamente.';
     }
   }
 
-  // Método para regresar
   regresar() {
-    this.router.navigate(['/categorias']);
+    if (this.categoriaForm.dirty && !this.guardando) {
+      if (confirm('¿Estás seguro de que deseas salir? Los cambios no guardados se perderán.')) {
+        this.router.navigate(['/categorias']);
+      }
+    } else {
+      this.router.navigate(['/categorias']);
+    }
   }
 
-  // Método para obtener el mensaje de error de un campo
   getErrorMessage(fieldName: string): string {
     const field = this.categoriaForm.get(fieldName);
     if (field?.errors && field.touched) {
@@ -88,9 +93,13 @@ export class NuevaCategoria implements OnInit {
     return '';
   }
 
-  // Método para verificar si un campo tiene error
   hasError(fieldName: string): boolean {
     const field = this.categoriaForm.get(fieldName);
     return !!(field?.errors && field.touched);
+  }
+
+  limpiarMensajes() {
+    this.mensajeError = '';
+    this.mensajeExito = '';
   }
 }

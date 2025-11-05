@@ -1,4 +1,5 @@
 <div class="ingresos-container">
+  <!-- Header Section -->
   <div class="page-header">
     <div class="header-content">
       <div class="title-section">
@@ -7,17 +8,26 @@
     </div>
   </div>
 
-  <div class="options-container">
-    <p class="prompt">Elige una opción:</p>
-    <div class="button-group">
-      <button class="action-button" routerLink="/ingresos/nuevo-ingreso">
-        <span class="material-icons">add</span>
-        Crear un Ingreso
-      </button>
-      <button class="action-button" routerLink="/ingresos/consulta-ingresos">
-        <span class="material-icons">list</span>
-        Consulta de Ingresos
-      </button>
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="options-container">
+      <h2 class="options-title">Elige una opción:</h2>
+
+      <div class="buttons-container">
+        <button
+          class="option-button"
+          routerLink="/ingresos/nuevo-ingreso">
+          <span class="material-icons">add</span>
+          Crear un ingreso
+        </button>
+
+        <button
+          class="option-button"
+          routerLink="/ingresos/consulta-ingresos">
+          <span class="material-icons">list</span>
+          Consulta de ingresos
+        </button>
+      </div>
     </div>
   </div>
 </div>

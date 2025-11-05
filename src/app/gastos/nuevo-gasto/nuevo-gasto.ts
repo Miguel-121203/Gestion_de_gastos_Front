@@ -1,11 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 
 import { GastosService } from '../../services/gastos.service';
-import { CategoriaGasto, Gasto } from '../../interface/gasto.interface';
-
+import { CategoriasService } from '../../services/categorias.service';
+import { Gasto } from '../../interface/gasto.interface';
+import { CategoriaAPI } from '../../interface/categories.interface';
 
 @Component({
   selector: 'app-nuevo-gasto',
@@ -16,38 +17,64 @@ import { CategoriaGasto, Gasto } from '../../interface/gasto.interface';
 })
 export class NuevoGasto implements OnInit {
 
-  nuevoGasto: Gasto = {
-    amount: 0,
-    expenseCategoryId: 0,
-    expenseDate: new Date(),
-    description: '',
-    userId: 1 // Cambia esto por el ID del usuario logueado
-  };
+nuevoGasto: Gasto = {
+  amount: 0,
+  expenseCategoryId: 0,
+  expenseDate: new Date().toISOString().split('T')[0], // ✅ Formato "YYYY-MM-DD"
+  description: '',
+  userId: 1
+};
 
-  // Categorías precargadas
-  categorias: CategoriaGasto[] = [
-    { id: 1, nombre: 'Alimentación', description: 'Gastos de comida y bebidas' },
-    { id: 2, nombre: 'Transporte', description: 'Gastos de movilidad' },
-    { id: 3, nombre: 'Entretenimiento', description: 'Gastos de ocio' },
-    { id: 4, nombre: 'Salud', description: 'Gastos médicos' },
-    { id: 5, nombre: 'Educación', description: 'Gastos educativos' },
-    { id: 6, nombre: 'Servicios', description: 'Servicios públicos y privados' },
-    { id: 7, nombre: 'Vivienda', description: 'Gastos del hogar' },
-    { id: 8, nombre: 'Ropa', description: 'Vestimenta y accesorios' },
-    { id: 9, nombre: 'Tecnología', description: 'Dispositivos y software' },
-    { id: 10, nombre: 'Otros', description: 'Gastos varios' }
-  ];
+  categorias: CategoriaAPI[] = [];
+  categoriasGasto: CategoriaAPI[] = []; // Solo categorías de tipo EXPENSE
 
   isLoading: boolean = false;
+  isLoadingCategorias: boolean = false;
   errorMessage: string = '';
 
-  constructor(
-    private gastosService: GastosService,
-    private router: Router
-  ) {}
+  private gastosService = inject(GastosService);
+  private categoriasService = inject(CategoriasService);
+  private router = inject(Router);
 
   ngOnInit() {
+    this.cargarCategorias();
+  }
 
+  cargarCategorias() {
+    this.isLoadingCategorias = true;
+
+    // Opción 1: Cargar solo categorías de tipo EXPENSE
+    this.categoriasService.obtenerCategoriasPorTipo('EXPENSE').subscribe({
+      next: (categorias) => {
+        this.categoriasGasto = categorias.filter(cat => cat.type)
+        console.log('Categorías de gasto cargadas:', this.categoriasGasto);
+        this.isLoadingCategorias = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar categorías:', error);
+        this.errorMessage = 'Error al cargar las categorías';
+        this.isLoadingCategorias = false;
+      }
+    });
+
+    // Opción 2: Si quieres cargar todas y filtrar
+    /*
+    this.categoriasService.obtenerCategorias().subscribe({
+      next: (categorias) => {
+        // Filtrar solo categorías activas de tipo EXPENSE
+        this.categoriasGasto = categorias.filter(cat =>
+          cat.type === 'EXPENSE' && cat.active
+        );
+        console.log('Categorías de gasto cargadas:', this.categoriasGasto);
+        this.isLoadingCategorias = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar categorías:', error);
+        this.errorMessage = 'Error al cargar las categorías';
+        this.isLoadingCategorias = false;
+      }
+    });
+    */
   }
 
   createGasto() {
@@ -102,14 +129,19 @@ export class NuevoGasto implements OnInit {
   }
 
   limpiarFormulario() {
-    const today = new Date().toISOString().split('T')[0];
     this.nuevoGasto = {
       amount: 0,
       expenseCategoryId: 0,
-      expenseDate: new Date(),
+      expenseDate: new Date().toISOString().split('T')[0],
       description: '',
       userId: 1
     };
     this.errorMessage = '';
+  }
+
+  // Método auxiliar para obtener el nombre de una categoría
+  getNombreCategoria(categoryId: number): string {
+    const categoria = this.categoriasGasto.find(cat => cat.categoryId === categoryId);
+    return categoria ? categoria.name : 'Sin categoría';
   }
 }

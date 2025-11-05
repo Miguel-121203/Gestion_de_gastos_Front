@@ -1,5 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { GastosService } from '../../services/gastos.service';
+import { GastoResponse } from '../../interface/gasto.interface';
 
 @Component({
   selector: 'app-dashboard-main',
@@ -8,53 +10,90 @@ import { CommonModule } from '@angular/common';
   templateUrl: './dashboard-main.html',
   styleUrl: './dashboard-main.css'
 })
-export class DashboardMain {
-  // Datos de resumen
-  totalIngresos: number = 1000000;
-  totalGastos: number = 500000;
-  ingresosDelMes: number = 100000;
-  gastosDelMes: number = 50000;
+export class DashboardMain implements OnInit {
+  private gastosService = inject(GastosService);
 
-  // Datos del gráfico (ejemplo)
-  chartData = [
-    { mes: 'Enero', ingresos: 120000, gastos: 60000 },
-    { mes: 'Febrero', ingresos: 150000, gastos: 30000 },
-    { mes: 'Marzo', ingresos: 180000, gastos: 20000 },
-    { mes: 'Abril', ingresos: 200000, gastos: 190000 },
-    { mes: 'Mayo', ingresos: 80000, gastos: 40000 },
-    { mes: 'Junio', ingresos: 160000, gastos: 70000 },
-    { mes: 'Julio', ingresos: 140000, gastos: 25000 },
-    { mes: 'Agosto', ingresos: 220000, gastos: 90000 },
-    { mes: 'Septiembre', ingresos: 100000, gastos: 15000 },
-    { mes: 'Octubre', ingresos: 130000, gastos: 110000 },
-    { mes: 'Noviembre', ingresos: 170000, gastos: 20000 },
-    { mes: 'Diciembre', ingresos: 190000, gastos: 80000 }
-  ];
+  // 🔹 Variables dinámicas
+  gastos: GastoResponse[] = [];
+  totalGastos: number = 0;
+  promedioGastos: number = 0;
+  totalIngresos: number = 0; // si aún no tienes ingresos del backend, se deja ejemplo
+  ingresosDelMes: number = 0;
+  gastosDelMes: number = 0;
 
-  // Valores máximos para escalar el gráfico
+  // 🔹 Datos del gráfico
+  chartData: { mes: string; ingresos: number; gastos: number }[] = [];
   maxValue: number = 1000000;
 
-  constructor() { }
-
-  // Formatear números con separadores de miles
-  formatNumber(value: number): string {
-    return new Intl.NumberFormat('es-CO', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(value);
+  ngOnInit(): void {
+    this.cargarGastos();
   }
 
-  // Calcular altura de las barras (porcentaje del máximo)
+  cargarGastos(): void {
+    this.gastosService.getGastos().subscribe({
+      next: (data) => {
+        this.gastos = data;
+        this.calcularEstadisticas();
+      },
+      error: (err) => console.error('Error al cargar los gastos', err)
+    });
+  }
+
+  calcularEstadisticas(): void {
+    if (!this.gastos.length) return;
+
+    // Total de gastos
+    this.totalGastos = this.gastos.reduce((acc, g) => acc + g.amount, 0);
+
+    // Promedio
+    this.promedioGastos = this.totalGastos / this.gastos.length;
+
+    // Calcular gastos del mes actual
+    const mesActual = new Date().getMonth() + 1;
+    const anioActual = new Date().getFullYear();
+
+    const gastosMes = this.gastos.filter(g => {
+      const fecha = new Date(g.expenseDate);
+      return fecha.getMonth() + 1 === mesActual && fecha.getFullYear() === anioActual;
+    });
+
+    this.gastosDelMes = gastosMes.reduce((acc, g) => acc + g.amount, 0);
+
+    // Generar datos agrupados por mes para el gráfico
+    this.chartData = this.generarDatosPorMes(this.gastos);
+  }
+
+  generarDatosPorMes(gastos: GastoResponse[]): { mes: string; ingresos: number; gastos: number }[] {
+    const meses = [
+      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ];
+
+    const data = meses.map((mes, index) => {
+      const gastosMes = gastos.filter(g => new Date(g.expenseDate).getMonth() === index);
+      const totalMes = gastosMes.reduce((acc, g) => acc + g.amount, 0);
+      return { mes, ingresos: this.totalIngresos / 12, gastos: totalMes };
+    });
+
+    // Ajustar valor máximo del gráfico según el gasto más alto
+    this.maxValue = Math.max(...data.map(d => d.ingresos), ...data.map(d => d.gastos)) * 1.2;
+
+    return data;
+  }
+
+  // 🔹 Funciones auxiliares
+  formatNumber(value: number): string {
+    return new Intl.NumberFormat('es-CO', { minimumFractionDigits: 0 }).format(value);
+  }
+
   getBarHeight(value: number): number {
     return (value / this.maxValue) * 100;
   }
 
-  // Calcular el saldo (ingresos - gastos)
   getSaldo(): number {
     return this.totalIngresos - this.totalGastos;
   }
 
-  // Calcular el saldo del mes
   getSaldoDelMes(): number {
     return this.ingresosDelMes - this.gastosDelMes;
   }

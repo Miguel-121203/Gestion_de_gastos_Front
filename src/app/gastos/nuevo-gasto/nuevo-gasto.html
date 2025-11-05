@@ -37,6 +37,14 @@
         <h2>Información del Gasto</h2>
       </div>
 
+      <!-- Loading Categorías -->
+      <div *ngIf="isLoadingCategorias" class="alert-info">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+        </svg>
+        Cargando categorías...
+      </div>
+
       <form #gastoForm="ngForm" (ngSubmit)="createGasto()">
         <!-- Grid Layout -->
         <div class="form-grid">
@@ -57,10 +65,11 @@
                 [(ngModel)]="nuevoGasto.amount"
                 placeholder="0.00"
                 step="0.01"
-                min="0"
+                min="0.01"
                 required
                 class="form-input"
                 [class.input-error]="gastoForm.submitted && !nuevoGasto.amount"
+                [disabled]="isLoading"
                 #amount="ngModel">
             </div>
             <p *ngIf="gastoForm.submitted && !nuevoGasto.amount" class="error-message">
@@ -86,6 +95,7 @@
               required
               class="form-input"
               [class.input-error]="gastoForm.submitted && !nuevoGasto.expenseDate"
+              [disabled]="isLoading"
               #expenseDate="ngModel">
             <p *ngIf="gastoForm.submitted && !nuevoGasto.expenseDate" class="error-message">
               Seleccione una fecha
@@ -102,19 +112,33 @@
             </svg>
             Categoría *
           </label>
-          <select
-            name="expenseCategoryId"
-            [(ngModel)]="nuevoGasto.expenseCategoryId"
-            required
-            class="form-input"
-            [class.input-error]="gastoForm.submitted && !nuevoGasto.expenseCategoryId"
-            #category="ngModel">
-            <option value="">Seleccione una categoría</option>
-            <option *ngFor="let cat of categorias" [value]="cat.id">
-              {{ cat.nombre }}
-            </option>
-          </select>
-          <p *ngIf="gastoForm.submitted && !nuevoGasto.expenseCategoryId" class="error-message">
+      <select
+  name="expenseCategoryId"
+  [(ngModel)]="nuevoGasto.expenseCategoryId"
+  required
+  class="form-input"
+  [class.input-error]="gastoForm.submitted && (!nuevoGasto.expenseCategoryId || nuevoGasto.expenseCategoryId === 0)"
+  [disabled]="isLoading || isLoadingCategorias"
+  #category="ngModel">
+  <option [ngValue]="0">Seleccione una categoría</option>
+  <option *ngFor="let cat of categoriasGasto" [ngValue]="cat.categoryId">
+    {{ cat.name }}
+    <span *ngIf="cat.description"> - {{ cat.description }}</span>
+  </option>
+</select>
+
+<!-- Mensaje si no hay categorías -->
+<div *ngIf="!isLoadingCategorias && categoriasGasto.length === 0" class="alert-warning">
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <circle cx="12" cy="12" r="10"></circle>
+    <line x1="12" y1="8" x2="12" y2="12"></line>
+    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+  </svg>
+  No hay categorías de gasto disponibles.
+  <a routerLink="/categorias" class="link-primary">Crear una nueva categoría</a>
+</div>
+
+          <p *ngIf="gastoForm.submitted && (!nuevoGasto.expenseCategoryId || nuevoGasto.expenseCategoryId === 0)" class="error-message">
             Seleccione una categoría
           </p>
         </div>
@@ -138,6 +162,7 @@
             required
             class="form-input"
             [class.input-error]="gastoForm.submitted && !nuevoGasto.description"
+            [disabled]="isLoading"
             #description="ngModel"></textarea>
           <p *ngIf="gastoForm.submitted && !nuevoGasto.description" class="error-message">
             La descripción es obligatoria
@@ -146,6 +171,11 @@
 
         <!-- Error Message -->
         <div *ngIf="errorMessage" class="alert-error">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="15" y1="9" x2="9" y2="15"></line>
+            <line x1="9" y1="9" x2="15" y2="15"></line>
+          </svg>
           {{ errorMessage }}
         </div>
 
@@ -153,7 +183,7 @@
         <div class="button-group">
           <button
             type="submit"
-            [disabled]="isLoading"
+            [disabled]="isLoading || isLoadingCategorias || categoriasGasto.length === 0"
             class="btn-primary">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
@@ -165,6 +195,7 @@
           <button
             type="button"
             (click)="limpiarFormulario()"
+            [disabled]="isLoading"
             class="btn-secondary">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -180,6 +211,9 @@
     <div class="info-card">
       <p>
         <span class="tip-badge">💡 Tip:</span> Asegúrate de llenar todos los campos marcados con * para registrar tu gasto correctamente.
+      </p>
+      <p *ngIf="categoriasGasto.length > 0" style="margin-top: 0.5rem;">
+        <span class="tip-badge">📊</span> Tienes {{ categoriasGasto.length }} categoría(s) de gasto disponible(s).
       </p>
     </div>
   </div>
