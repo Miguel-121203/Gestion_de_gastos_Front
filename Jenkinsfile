@@ -23,20 +23,20 @@ pipeline {
                     if (branchName == 'dev') {
                         env.PORT = '4200'
                         env.ENV_NAME = 'development'
-                        env.CONTAINER_NAME = 'gestion-gastos-dev'
+                        env.CONTAINER_NAME = 'front-dev'
                     } else if (branchName == 'qa') {
                         env.PORT = '4201'
                         env.ENV_NAME = 'qa'
-                        env.CONTAINER_NAME = 'gestion-gastos-qa'
+                        env.CONTAINER_NAME = 'front-qa'
                     } else if (branchName == 'main' || branchName == 'master') {
                         env.PORT = '4202'
                         env.ENV_NAME = 'production'
-                        env.CONTAINER_NAME = 'gestion-gastos-prod'
+                        env.CONTAINER_NAME = 'front-prod'
                     } else {
                         // Default to dev environment for other branches
                         env.PORT = '4200'
                         env.ENV_NAME = 'development'
-                        env.CONTAINER_NAME = 'gestion-gastos-dev'
+                        env.CONTAINER_NAME = 'front-dev'
                     }
                     echo "Deploying to ${env.ENV_NAME} environment on port ${env.PORT}"
                 }
