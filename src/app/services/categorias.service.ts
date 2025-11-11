@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 // Importa las interfaces desde tu archivo de interfaces
 import { CategoriaAPI, CategoriaRequest, CategoriaUpdateRequest } from '../interface/categories.interface';
@@ -11,7 +12,7 @@ import { CategoriaAPI, CategoriaRequest, CategoriaUpdateRequest } from '../inter
 })
 export class CategoriasService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8112/api/v1/categories'
+  private apiUrl = `${environment.apiUrls.categories}/categories`
 
   /**
    * Obtener todas las categorías

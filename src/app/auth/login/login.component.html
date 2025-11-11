@@ -1,0 +1,112 @@
+<div class="login-container">
+  <div class="login-card">
+    <!-- Logo/Header -->
+    <div class="login-header">
+      <div class="logo-circle">
+        <i class="fas fa-wallet"></i>
+      </div>
+      <h1>Gestión de Gastos</h1>
+      <p class="subtitle">Inicia sesión para continuar</p>
+    </div>
+
+    <!-- Formulario -->
+    <form (ngSubmit)="onLogin()" class="login-form">
+      <!-- Error general -->
+      <div class="alert alert-error" *ngIf="error">
+        <i class="fas fa-exclamation-circle"></i>
+        {{ error }}
+      </div>
+
+      <!-- Email -->
+      <div class="form-group">
+        <label for="email">
+          <i class="fas fa-envelope"></i>
+          Correo electrónico
+        </label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          [(ngModel)]="email"
+          (input)="onEmailChange()"
+          [class.input-error]="emailError"
+          placeholder="usuario@ejemplo.com"
+          autocomplete="email"
+          required
+        />
+        <span class="error-message" *ngIf="emailError">{{ emailError }}</span>
+      </div>
+
+      <!-- Password -->
+      <div class="form-group">
+        <label for="password">
+          <i class="fas fa-lock"></i>
+          Contraseña
+        </label>
+        <div class="password-input-wrapper">
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            id="password"
+            name="password"
+            [(ngModel)]="password"
+            (input)="onPasswordChange()"
+            [class.input-error]="passwordError"
+            placeholder="••••••••"
+            autocomplete="current-password"
+            required
+          />
+          <button
+            type="button"
+            class="toggle-password"
+            (click)="togglePasswordVisibility()"
+            [attr.aria-label]="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+          >
+            <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+          </button>
+        </div>
+        <span class="error-message" *ngIf="passwordError">{{ passwordError }}</span>
+      </div>
+
+      <!-- Botón de login -->
+      <button
+        type="submit"
+        class="btn-login"
+        [disabled]="loading"
+      >
+        <span *ngIf="!loading">
+          <i class="fas fa-sign-in-alt"></i>
+          Iniciar Sesión
+        </span>
+        <span *ngIf="loading" class="loading-spinner">
+          <i class="fas fa-circle-notch fa-spin"></i>
+          Iniciando sesión...
+        </span>
+      </button>
+
+      <!-- Divider -->
+      <div class="divider">
+        <span>o</span>
+      </div>
+
+      <!-- Link a registro -->
+      <div class="register-link">
+        <p>¿No tienes cuenta?</p>
+        <button type="button" class="btn-register" (click)="goToRegister()">
+          Crear cuenta
+        </button>
+      </div>
+    </form>
+
+    <!-- Footer -->
+    <div class="login-footer">
+      <p>Gestión de Gastos © 2025</p>
+    </div>
+  </div>
+
+  <!-- Decorative background -->
+  <div class="bg-decoration">
+    <div class="circle circle-1"></div>
+    <div class="circle circle-2"></div>
+    <div class="circle circle-3"></div>
+  </div>
+</div>

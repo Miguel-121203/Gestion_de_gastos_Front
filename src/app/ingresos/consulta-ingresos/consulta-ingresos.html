@@ -123,6 +123,7 @@
       <thead>
         <tr>
           <th>Fecha</th>
+          <th>Categoría</th>
           <th>Descripción</th>
           <th>Monto</th>
           <th>Acciones</th>
@@ -131,6 +132,7 @@
       <tbody>
         <tr *ngFor="let ingreso of ingresosFiltrados" [class.inactive]="ingreso.active === false">
           <td>{{ ingreso.incomeDate | date:'dd/MM/yyyy' }}</td>
+          <td>{{ ingreso.category?.name || 'Sin categoría' }}</td>
           <td>{{ ingreso.description }}</td>
           <td class="monto-cell">$ {{ ingreso.amount | number:'1.2-2' }}</td>
           <td class="acciones-cell">
@@ -143,7 +145,7 @@
           </td>
         </tr>
         <tr *ngIf="ingresosFiltrados.length === 0">
-          <td colspan="4" class="no-data">No se encontraron ingresos</td>
+          <td colspan="5" class="no-data">No se encontraron ingresos</td>
         </tr>
       </tbody>
     </table>

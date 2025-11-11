@@ -68,7 +68,7 @@
         <tr *ngFor="let gasto of gastosFiltrados" [class.inactive]="!gasto.active">
           <td>#{{ gasto.expenseId }}</td>
           <td>{{ gasto.expenseDate | date:'dd/MM/yyyy' }}</td>
-          <td>{{ gasto.category}}</td>
+          <td>{{ gasto.category?.name || 'Sin categoría' }}</td>
           <td>{{ gasto.description }}</td>
           <td>${{ gasto.amount | number:'1.2-2' }}</td>
           <td>{{ gasto.userId }}</td>

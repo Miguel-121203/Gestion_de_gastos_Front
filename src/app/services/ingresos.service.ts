@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 import { income } from '../interface/income.interface';
 
 @Injectable({
@@ -8,7 +9,7 @@ import { income } from '../interface/income.interface';
 })
 export class IngresosService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8102/api/v1/incomes'; // URL base del microservicio de ingresos
+  private apiUrl = `${environment.apiUrls.incomes}/incomes`; // URL base del microservicio de ingresos
 
   // 🔹 GET: Listar todos los ingresos
   getIngresos(): Observable<income[]> {

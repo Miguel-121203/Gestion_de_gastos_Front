@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 
 import { IngresosService } from '../../services/ingresos.service';
 import { ExportService } from '../../services/export.service';
-import { income } from '../../interface/income.interface';
+import { income, IncomeResponse } from '../../interface/income.interface';
 
 interface CalendarDay {
   day: number;
@@ -27,9 +27,9 @@ export class ConsultaIngresos implements OnInit {
   private ingresosService = inject(IngresosService);
   private exportService = inject(ExportService);
 
-  // Datos de ingresos desde el servicio
-  ingresos: income[] = [];
-  ingresosFiltrados: income[] = [];
+  // Datos de ingresos desde el servicio (usando IncomeResponse para obtener category)
+  ingresos: IncomeResponse[] = [];
+  ingresosFiltrados: IncomeResponse[] = [];
 
   // Filtros
   categoriaSeleccionada: string = '';
@@ -43,7 +43,7 @@ export class ConsultaIngresos implements OnInit {
 
   // Variables para el modal de edición
   modalVisible: boolean = false;
-  ingresoEditando: income | null = null;
+  ingresoEditando: IncomeResponse | null = null;
   nuevaDescripcion: string = '';
   nuevoMonto: number = 0;
 
@@ -80,7 +80,7 @@ export class ConsultaIngresos implements OnInit {
     this.mensaje = '';
 
     this.ingresosService.getIngresos().subscribe({
-      next: (data: income[]) => {
+      next: (data: any[]) => {
         this.ingresos = data;
         this.ingresosFiltrados = data;
         this.loading = false;
@@ -96,7 +96,7 @@ export class ConsultaIngresos implements OnInit {
 
   // ===== MODAL DE EDICIÓN =====
 
-  abrirModal(ingreso: income): void {
+  abrirModal(ingreso: IncomeResponse): void {
     this.ingresoEditando = { ...ingreso };
     this.nuevaDescripcion = ingreso.description;
     this.nuevoMonto = ingreso.amount;
@@ -132,7 +132,7 @@ export class ConsultaIngresos implements OnInit {
     });
   }
 
-  eliminarIngreso(ingreso: income): void {
+  eliminarIngreso(ingreso: IncomeResponse): void {
     if (!ingreso.incomeId) return;
 
     const confirmacion = confirm(`🗑️ ¿Seguro que deseas eliminar el ingreso "${ingreso.description}"?`);

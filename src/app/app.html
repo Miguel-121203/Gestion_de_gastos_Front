@@ -1,4 +1,5 @@
-<div class="app-container">
+<!-- Mostrar layout completo solo si está autenticado -->
+<div class="app-container" *ngIf="isAuthenticated$ | async; else loginView">
   <!-- Sidebar -->
   <aside class="sidebar">
     <div class="sidebar-header">
@@ -7,46 +8,55 @@
 
     <div class="user-info">
       <div class="user-icon material-icons">person</div>
-      <div class="user-details">
+      <div class="user-details" *ngIf="currentUser$ | async as user">
         <p>Bienvenido</p>
-        <p class="username">Jesus_David777</p>
+        <p class="username">{{ user.firstName }} {{ user.lastName }}</p>
+        <p class="user-email">{{ user.email }}</p>
       </div>
     </div>
 
     <nav class="sidebar-nav">
       <ul class="nav-list">
         <li class="nav-item" [class.active]="isActiveRoute('/dashboard')">
-          <a href="/dashboard" class="nav-link">
+          <a routerLink="/dashboard" class="nav-link">
             <span class="nav-icon material-icons">dashboard</span>
             Dashboard
           </a>
         </li>
         <li class="nav-item" [class.active]="isActiveRoute('/gastos')">
-          <a href="/gastos" class="nav-link">
+          <a routerLink="/gastos" class="nav-link">
             <span class="nav-icon material-icons">trending_down</span>
             Gastos
           </a>
         </li>
         <li class="nav-item" [class.active]="isActiveRoute('/ingresos')">
-          <a href="/ingresos" class="nav-link">
+          <a routerLink="/ingresos" class="nav-link">
             <span class="nav-icon material-icons">trending_up</span>
             Ingresos
           </a>
         </li>
         <li class="nav-item" [class.active]="isActiveRoute('/categorias')">
-          <a href="/categorias" class="nav-link">
+          <a routerLink="/categorias" class="nav-link">
             <span class="nav-icon material-icons">category</span>
-            Categorías 
+            Categorías
           </a>
         </li>
         <li class="nav-item" [class.active]="isActiveRoute('/configuracion')">
-          <a href="/configuracion" class="nav-link">
+          <a routerLink="/configuracion" class="nav-link">
             <span class="nav-icon material-icons">settings</span>
             Configuración
           </a>
         </li>
       </ul>
     </nav>
+
+    <!-- Botón de logout -->
+    <div class="sidebar-footer">
+      <button class="btn-logout" (click)="logout()">
+        <span class="nav-icon material-icons">logout</span>
+        Cerrar Sesión
+      </button>
+    </div>
   </aside>
 
   <!-- Main Content -->
@@ -54,3 +64,8 @@
     <router-outlet />
   </main>
 </div>
+
+<!-- Vista de login (sin sidebar) -->
+<ng-template #loginView>
+  <router-outlet />
+</ng-template>

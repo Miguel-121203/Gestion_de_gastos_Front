@@ -1,0 +1,39 @@
+# Node modules
+node_modules/
+npm-debug.log
+
+# Angular build outputs
+dist/
+.angular/
+
+# IDE
+.vscode/
+.idea/
+
+# Git
+.git/
+.gitignore
+
+# Tests
+*.spec.ts
+karma.conf.js
+coverage/
+
+# Documentation
+*.md
+!README.md
+
+# Environment files (shouldn't be in Docker image)
+.env
+.env.local
+
+# Logs
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Jenkins
+Jenkinsfile

@@ -5,6 +5,7 @@ import { RouterModule, Router } from '@angular/router';
 
 import { IngresosService } from '../../services/ingresos.service';
 import { CategoriasService } from '../../services/categorias.service';
+import { AuthService } from '../../services/auth.service';
 import { income } from '../../interface/income.interface';
 import { CategoriaAPI } from '../../interface/categories.interface';
 
@@ -22,7 +23,7 @@ export class NuevoIngreso implements OnInit {
     incomeCategoryId: 0,
     incomeDate: new Date(),
     description: '',
-    userId: 1
+    userId: 0 // Se establecerá en ngOnInit
   };
 
   categorias: CategoriaAPI[] = [];
@@ -34,9 +35,20 @@ export class NuevoIngreso implements OnInit {
 
   private ingresosService = inject(IngresosService);
   private categoriasService = inject(CategoriasService);
+  private authService = inject(AuthService);
   private router = inject(Router);
 
   ngOnInit() {
+    // Obtener userId del usuario autenticado
+    const userId = this.authService.getUserId();
+    if (userId) {
+      this.nuevoIngreso.userId = userId;
+      console.log('✅ Usuario ID cargado:', userId);
+    } else {
+      console.error('❌ No se pudo obtener el userId');
+      this.errorMessage = 'Error: No se pudo identificar el usuario';
+    }
+
     this.cargarCategorias();
   }
 

@@ -5,6 +5,7 @@ import { RouterModule, Router } from '@angular/router';
 
 import { GastosService } from '../../services/gastos.service';
 import { CategoriasService } from '../../services/categorias.service';
+import { AuthService } from '../../services/auth.service';
 import { Gasto } from '../../interface/gasto.interface';
 import { CategoriaAPI } from '../../interface/categories.interface';
 
@@ -22,7 +23,7 @@ nuevoGasto: Gasto = {
   expenseCategoryId: 0,
   expenseDate: new Date().toISOString().split('T')[0], // ✅ Formato "YYYY-MM-DD"
   description: '',
-  userId: 1
+  userId: 0 // Se establecerá en ngOnInit
 };
 
   categorias: CategoriaAPI[] = [];
@@ -34,9 +35,20 @@ nuevoGasto: Gasto = {
 
   private gastosService = inject(GastosService);
   private categoriasService = inject(CategoriasService);
+  private authService = inject(AuthService);
   private router = inject(Router);
 
   ngOnInit() {
+    // Obtener userId del usuario autenticado
+    const userId = this.authService.getUserId();
+    if (userId) {
+      this.nuevoGasto.userId = userId;
+      console.log('✅ Usuario ID cargado:', userId);
+    } else {
+      console.error('❌ No se pudo obtener el userId');
+      this.errorMessage = 'Error: No se pudo identificar el usuario';
+    }
+
     this.cargarCategorias();
   }
 

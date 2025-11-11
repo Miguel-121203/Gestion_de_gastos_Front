@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 import { GastoResponse, Gasto } from '../interface/gasto.interface';
 
 @Injectable({
@@ -8,7 +9,7 @@ import { GastoResponse, Gasto } from '../interface/gasto.interface';
 })
 export class GastosService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8082/api/v1/expenses'; // Base URL
+  private apiUrl = `${environment.apiUrls.expenses}/expenses`; // Base URL
 
   // 🔹 GET: Listar todos los gastos
   getGastos(): Observable<GastoResponse[]> {
