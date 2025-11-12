@@ -74,7 +74,7 @@ export class LoginComponent {
         } else if (err.status === 404) {
           this.error = 'Usuario no encontrado';
         } else if (err.status === 0) {
-          this.error = 'No se pudo conectar con el servidor. Verifica que esté corriendo en el puerto 8110';
+          this.error = 'No se pudo conectar con el servidor. Verifica que los microservicios estén corriendo';
         } else {
           this.error = 'Error al iniciar sesión. Intenta nuevamente.';
         }

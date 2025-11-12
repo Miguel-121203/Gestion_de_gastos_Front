@@ -36,8 +36,25 @@ RUN echo "Building for environment: ${ENV_NAME}" && \
 # ======================================
 FROM nginx:alpine
 
-# Copy custom nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Build argument for environment (needs to be redeclared in this stage)
+ARG ENV_NAME=production
+
+# Copy all nginx configurations
+COPY nginx-dev.conf /tmp/nginx-dev.conf
+COPY nginx-qa.conf /tmp/nginx-qa.conf
+COPY nginx-prod.conf /tmp/nginx-prod.conf
+
+# Select the correct nginx configuration based on environment
+RUN if [ "$ENV_NAME" = "development" ]; then \
+        cp /tmp/nginx-dev.conf /etc/nginx/conf.d/default.conf; \
+    elif [ "$ENV_NAME" = "qa" ]; then \
+        cp /tmp/nginx-qa.conf /etc/nginx/conf.d/default.conf; \
+    elif [ "$ENV_NAME" = "production" ]; then \
+        cp /tmp/nginx-prod.conf /etc/nginx/conf.d/default.conf; \
+    else \
+        cp /tmp/nginx-prod.conf /etc/nginx/conf.d/default.conf; \
+    fi && \
+    rm /tmp/nginx-*.conf
 
 # Copy built application from builder stage
 COPY --from=builder /app/dist/gestion-gastos/browser /usr/share/nginx/html
