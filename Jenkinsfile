@@ -23,14 +23,17 @@ pipeline {
                         env.PORT = '4200'
                         env.ENV_NAME = 'development'
                         env.CONTAINER_NAME = 'front-dev'
+                        env.NETWORK_NAME = 'gestios-gastos-back-dev'
                     } else if (branchName == 'qa') {
                         env.PORT = '4201'
                         env.ENV_NAME = 'qa'
                         env.CONTAINER_NAME = 'front-qa'
+                        env.NETWORK_NAME = 'gestios-gastos-back-qa'
                     } else if (branchName == 'main' || branchName == 'master') {
                         env.PORT = '4202'
                         env.ENV_NAME = 'production'
                         env.CONTAINER_NAME = 'front-prod'
+                        env.NETWORK_NAME = 'gestios-gastos-back-prod'
                     }
                     echo "Deploying to ${env.ENV_NAME} environment on port ${env.PORT}"
                 }
@@ -53,11 +56,14 @@ pipeline {
             steps {
                 echo "Deploying to ${env.ENV_NAME} environment..."
                 sh '''
+                    docker network create ${NETWORK_NAME} || true
+                    
                     docker stop ${CONTAINER_NAME} || true
                     docker rm ${CONTAINER_NAME} || true
                     
                     docker run -d \
                         --name ${CONTAINER_NAME} \
+                        --network ${NETWORK_NAME} \
                         --restart unless-stopped \
                         -p ${PORT}:80 \
                         ${DOCKER_IMAGE}-${ENV_NAME}:${BUILD_NUMBER}
