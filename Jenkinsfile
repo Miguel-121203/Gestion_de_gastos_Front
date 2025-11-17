@@ -81,14 +81,4 @@ pipeline {
             }
         }
     }
-
-    post {
-        always {
-            sh '''
-                docker images ${DOCKER_IMAGE}-${ENV_NAME} --format "{{.Tag}}" | \
-                grep -E '^[0-9]+$' | sort -rn | tail -n +6 | \
-                xargs -r -I {} docker rmi ${DOCKER_IMAGE}-${ENV_NAME}:{} || true
-            '''
-        }
-    }
 }
