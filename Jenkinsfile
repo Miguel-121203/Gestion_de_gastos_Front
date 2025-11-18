@@ -33,7 +33,7 @@ pipeline {
                         env.PORT = '4202'
                         env.ENV_NAME = 'production'
                         env.CONTAINER_NAME = 'front-prod'
-                        env.NETWORK_NAME = 'gestios-gastos-back-prod'
+                        env.NETWORK_NAME = 'gestios-gastos-back-pdn'
                     }
                     echo "Deploying to ${env.ENV_NAME} environment on port ${env.PORT}"
                 }
